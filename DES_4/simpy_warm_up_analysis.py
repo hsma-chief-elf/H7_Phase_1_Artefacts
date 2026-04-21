@@ -217,7 +217,7 @@ class Trial:
             fig.write_html(f"cumul_mean_{col}.html")
 
 
-
+        # OLD
         for i, df in enumerate(
             self.list_of_cumulative_mean_dfs, start=1
         ):
