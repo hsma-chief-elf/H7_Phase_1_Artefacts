@@ -23,7 +23,7 @@ class Param:
         results_collection_period = 120,
         warm_up_period = 60,
         num_replications = 100,
-        num_replications_warm_up_assessment = 100, # NEW
+        num_replications_warm_up_assessment = 50, # NEW
         warm_up_asessment_sim_length_scaler = 20, # NEW
         cumulative_mean_tracker_interval = 5 # NEW
     ):
@@ -131,8 +131,6 @@ class Model:
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
-
-        print (self.cumulative_mean_df) # NEW TEMP REMOVE
 
     def convert_entity_list_to_dataframe(self, entity_list):
         entity_dateframe = pd.DataFrame(
