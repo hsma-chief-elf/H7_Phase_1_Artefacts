@@ -216,31 +216,6 @@ class Trial:
             fig.show()
             fig.write_html(f"cumul_mean_{col}.html")
 
-
-        # OLD
-        for i, df in enumerate(
-            self.list_of_cumulative_mean_dfs, start=1
-        ):
-            df_filtered = df.drop(
-                columns=[
-                    "id"
-                ]
-            )
-            
-            x_col = "Simulation Time"
-            y_cols = [col for col in df_filtered.columns if col != x_col]
-
-            fig = px.line(
-                df_filtered,
-                x=x_col,
-                y=y_cols,
-                labels={
-                    "value":"Cumulative Mean"
-                },
-            )
-            fig.show()
-            fig.write_html(f"cumul_mean_rep_{i}.html")
-
         # HERE!!!! Converting to running as a trial, before plotting results
         # Don't forget to change code at bottom too
 
