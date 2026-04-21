@@ -23,7 +23,7 @@ class Param:
         results_collection_period = 120,
         warm_up_period = 60,
         num_replications = 100,
-        num_replications_warm_up_assessment = 5, # NEW
+        num_replications_warm_up_assessment = 100, # NEW
         warm_up_asessment_sim_length_scaler = 20, # NEW
         cumulative_mean_tracker_interval = 5 # NEW
     ):
@@ -189,9 +189,10 @@ class Trial:
                 wu_model_replication.cumulative_mean_df
             )
 
+        reference_df = self.list_of_cumulative_mean_dfs[0]
         x_col = "Simulation Time"
         y_cols = [
-            col for col in df_filtered.columns if col not in [x_col, "id"]
+            col for col in reference_df.columns if col not in [x_col, "id"]
         ]
 
         for col in y_cols:
@@ -215,9 +216,6 @@ class Trial:
 
             fig.show()
             fig.write_html(f"cumul_mean_{col}.html")
-
-        # HERE!!!! Converting to running as a trial, before plotting results
-        # Don't forget to change code at bottom too
 
     def calculate_trial_results(self):
         self.replication_df = pd.DataFrame(
