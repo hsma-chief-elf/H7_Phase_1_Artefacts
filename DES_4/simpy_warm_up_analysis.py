@@ -280,36 +280,3 @@ warm_up_assessment_trial = Trial(base_case_params)
 warm_up_assessment_trial.run_warm_up_assessment_trial()
 warm_up_assessment_trial.calculate_trial_results()
 
-base_case_trial = Trial(base_case_params)
-base_case_trial.run_trial()
-base_case_trial.calculate_trial_results()
-print ("BASE CASE TRIAL RESULTS")
-print ("-----------------------")
-print ("Queuing Time for the Nurse")
-print (f"Mean : {base_case_trial.trial_mean_q_time_nurse:.2f} minutes")
-print (f"SD : {base_case_trial.trial_sd_q_time_nurse:.2f} minutes")
-print (f"90th Perc : {base_case_trial.trial_perc_90_q_time_nurse:.2f} minutes")
-print (f"Standard Error : {base_case_trial.se_q_time_nurse:.2f}")
-print (
-    f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f}, ",
-    f"{base_case_trial.ci_upper_q_time_nurse:.2f}) minutes"
-)
-print ()
-
-what_if_params = Param(num_nurses=2)
-what_if_trial = Trial(what_if_params)
-what_if_trial.run_trial()
-what_if_trial.calculate_trial_results()
-print ("2 NURSES TRIAL RESULTS")
-print ("----------------------")
-print ("Queuing Time for the Nurse")
-print (f"Mean : {what_if_trial.trial_mean_q_time_nurse:.2f} minutes")
-print (f"SD : {what_if_trial.trial_sd_q_time_nurse:.2f} minutes")
-print (f"90th Perc : {what_if_trial.trial_perc_90_q_time_nurse:.2f} minutes")
-print (f"Standard Error : {what_if_trial.se_q_time_nurse:.2f}")
-print (
-    f"95% CI : ({what_if_trial.ci_lower_q_time_nurse:.2f}, ",
-    f"{what_if_trial.ci_upper_q_time_nurse:.2f}) minutes"
-)
-print ()
-
