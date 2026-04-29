@@ -125,9 +125,6 @@ class Model:
 
     # NEW
     def run_warm_up_assessment(self):
-        self.param.num_replications = (
-            self.param.num_replications_warm_up_assessment
-        )
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
@@ -158,6 +155,7 @@ class Trial:
         self.ci_lower_q_time_nurse = pd.NA
         self.ci_upper_q_time_nurse = pd.NA
         self.se_q_time_nurse = pd.NA
+        self.warm_up_trial = False # NEW
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -171,6 +169,7 @@ class Trial:
 
     # NEW
     def run_warm_up_assessment_trial(self):
+        self.warm_up_trial = True
         self.list_of_cumulative_mean_dfs = []
 
         for wu_replication_id in range(
@@ -242,6 +241,12 @@ class Trial:
             fig.write_html(f"cumul_mean_{col}.html")
 
     def calculate_trial_results(self):
+        # NEW
+        if self.warm_up_trial:
+            total_reps = self.param.num_replications_warm_up_assessment
+        else:
+            total_reps = self.param.num_replications
+
         self.replication_df = pd.DataFrame(
             replication.__dict__ for replication in 
             self.list_of_simulation_replications
@@ -260,10 +265,10 @@ class Trial:
         )
 
         self.se_q_time_nurse = (
-            self.trial_sd_q_time_nurse / math.sqrt(self.param.num_replications)
-        )
+            self.trial_sd_q_time_nurse / math.sqrt(total_reps)
+        ) # NEW
 
-        t = stats.t.ppf(0.975, df=self.param.num_replications-1)
+        t = stats.t.ppf(0.975, df=total_reps-1)
 
         self.ci_lower_q_time_nurse = (
             self.trial_mean_q_time_nurse - (t * self.se_q_time_nurse)
