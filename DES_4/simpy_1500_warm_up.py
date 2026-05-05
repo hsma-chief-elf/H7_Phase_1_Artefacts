@@ -4,8 +4,8 @@ import pandas as pd
 import math
 from scipy import stats
 import numpy as np
-import plotly.express as px # NEW
-import plotly.graph_objects as go # NEW
+import plotly.express as px
+import plotly.graph_objects as go
 
 class Patient:
     def __init__(self, p_id):
@@ -23,9 +23,9 @@ class Param:
         results_collection_period = 120,
         warm_up_period = 60,
         num_replications = 100,
-        num_replications_warm_up_assessment = 50, # NEW
-        warm_up_asessment_sim_length_scaler = 20, # NEW
-        cumulative_mean_tracker_interval = 5 # NEW
+        num_replications_warm_up_assessment = 50,
+        warm_up_asessment_sim_length_scaler = 20,
+        cumulative_mean_tracker_interval = 5
     ):
         self.mean_patient_inter = mean_patient_inter
         self.mean_nurse_consult_time = mean_nurse_consult_time
@@ -35,15 +35,15 @@ class Param:
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
         self.num_replications = num_replications
-        # NEW
+        
         self.num_replications_warm_up_assessment = (
             num_replications_warm_up_assessment
         )
-        # NEW
+        
         self.sim_duration_warm_up_assessment = (
             self.sim_duration * warm_up_asessment_sim_length_scaler
         )
-        # NEW
+        
         self.cumulative_mean_tracker_interval = (
             cumulative_mean_tracker_interval
         )
@@ -82,7 +82,6 @@ class Model:
             sampled_inter = self.patient_inter_dist.sample()
             yield self.env.timeout(sampled_inter)
 
-    # NEW
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
 
@@ -123,7 +122,6 @@ class Model:
         self.env.process(self.generator_patient_arrivals())
         self.env.run(until=self.param.sim_duration)
 
-    # NEW
     def run_warm_up_assessment(self):
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
@@ -155,7 +153,7 @@ class Trial:
         self.ci_lower_q_time_nurse = pd.NA
         self.ci_upper_q_time_nurse = pd.NA
         self.se_q_time_nurse = pd.NA
-        self.warm_up_trial = False # NEW
+        self.warm_up_trial = False
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -167,7 +165,6 @@ class Trial:
             model_replication.calculate_run_results(patient_df)
             self.list_of_simulation_replications.append(model_replication)
 
-    # NEW
     def run_warm_up_assessment_trial(self):
         self.warm_up_trial = True
         self.list_of_cumulative_mean_dfs = []
@@ -241,7 +238,6 @@ class Trial:
             fig.write_html(f"cumul_mean_{col}.html")
 
     def calculate_trial_results(self):
-        # NEW
         if self.warm_up_trial:
             total_reps = self.param.num_replications_warm_up_assessment
         else:
@@ -266,9 +262,9 @@ class Trial:
 
         self.se_q_time_nurse = (
             self.trial_sd_q_time_nurse / math.sqrt(total_reps)
-        ) # NEW
+        )
 
-        t = stats.t.ppf(0.975, df=total_reps-1) # NEW
+        t = stats.t.ppf(0.975, df=total_reps-1)
 
         self.ci_lower_q_time_nurse = (
             self.trial_mean_q_time_nurse - (t * self.se_q_time_nurse)
@@ -280,8 +276,40 @@ class Trial:
 
 base_case_params = Param()
 
-# NEW
 warm_up_assessment_trial = Trial(base_case_params)
 warm_up_assessment_trial.run_warm_up_assessment_trial()
 warm_up_assessment_trial.calculate_trial_results()
 
+base_case_params = Param()
+base_case_trial = Trial(base_case_params)
+base_case_trial.run_trial()
+base_case_trial.calculate_trial_results()
+print ("BASE CASE TRIAL RESULTS")
+print ("-----------------------")
+print ("Queuing Time for the Nurse")
+print (f"Mean : {base_case_trial.trial_mean_q_time_nurse:.2f} minutes")
+print (f"SD : {base_case_trial.trial_sd_q_time_nurse:.2f} minutes")
+print (f"90th Perc : {base_case_trial.trial_perc_90_q_time_nurse:.2f} minutes")
+print (f"Standard Error : {base_case_trial.se_q_time_nurse:.2f}")
+print (
+    f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f}, ",
+    f"{base_case_trial.ci_upper_q_time_nurse:.2f}) minutes"
+)
+print ()
+
+what_if_params = Param(num_nurses=2)
+what_if_trial = Trial(what_if_params)
+what_if_trial.run_trial()
+what_if_trial.calculate_trial_results()
+print ("2 NURSES TRIAL RESULTS")
+print ("----------------------")
+print ("Queuing Time for the Nurse")
+print (f"Mean : {what_if_trial.trial_mean_q_time_nurse:.2f} minutes")
+print (f"SD : {what_if_trial.trial_sd_q_time_nurse:.2f} minutes")
+print (f"90th Perc : {what_if_trial.trial_perc_90_q_time_nurse:.2f} minutes")
+print (f"Standard Error : {what_if_trial.se_q_time_nurse:.2f}")
+print (
+    f"95% CI : ({what_if_trial.ci_lower_q_time_nurse:.2f}, ",
+    f"{what_if_trial.ci_upper_q_time_nurse:.2f}) minutes"
+)
+print ()
