@@ -32,6 +32,8 @@ class Param:
         num_nurses = 2,
         num_doctors = 3,
         num_pharmacists = 1,
+        branch_prob_triage_to_pharm = 0.4,
+        branch_prob_treat_to_pharm = 0.25,
         results_collection_period = 2880,
         warm_up_period = 20,
         num_replications = 100,
@@ -52,6 +54,8 @@ class Param:
         self.num_nurses = num_nurses
         self.num_doctors = num_doctors
         self.num_pharmacists = num_pharmacists
+        self.branch_prob_triage_to_pharm = branch_prob_triage_to_pharm
+        self.branch_prob_treat_to_pharm = branch_prob_treat_to_pharm
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
