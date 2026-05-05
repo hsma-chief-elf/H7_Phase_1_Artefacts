@@ -277,3 +277,35 @@ class Model:
             entity_dataframe["q_time_pharmacy"].quantile(0.9)
         )
 
+class Trial:
+    def __init__(self, param):
+        self.param = param
+        self.list_of_simulation_replications = []
+        self.trial_mean_q_time_reg = pd.NA
+        self.trial_sd_q_time_reg = pd.NA
+        self.trial_perc_90_q_time_reg = pd.NA
+        self.trial_mean_q_time_triage = pd.NA
+        self.trial_sd_q_time_triage = pd.NA
+        self.trial_perc_90_q_time_triage = pd.NA
+        self.trial_mean_q_time_treat = pd.NA
+        self.trial_sd_q_time_treat = pd.NA
+        self.trial_perc_90_q_time_treat = pd.NA
+        self.trial_mean_q_time_pharm = pd.NA
+        self.trial_sd_q_time_pharm = pd.NA
+        self.trial_perc_90_q_time_pharm = pd.NA
+
+        self.ci_lower_q_time_reg = pd.NA
+        self.ci_upper_q_time_reg = pd.NA
+        self.se_q_time_reg = pd.NA
+        self.ci_lower_q_time_triage = pd.NA
+        self.ci_upper_q_time_triage = pd.NA
+        self.se_q_time_triage = pd.NA
+        self.ci_lower_q_time_treat = pd.NA
+        self.ci_upper_q_time_treat = pd.NA
+        self.se_q_time_treat = pd.NA
+        self.ci_lower_q_time_pharm = pd.NA
+        self.ci_upper_q_time_pharm = pd.NA
+        self.se_q_time_pharm = pd.NA
+        self.warm_up_trial = False
+
+    
