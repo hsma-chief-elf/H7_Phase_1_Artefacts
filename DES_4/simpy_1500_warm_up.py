@@ -21,7 +21,7 @@ class Param:
         sd_nurse_consult_time = 1,
         num_nurses = 1,
         results_collection_period = 120,
-        warm_up_period = 60,
+        warm_up_period = 1500, # NEW
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
         warm_up_asessment_sim_length_scaler = 20,
@@ -276,11 +276,10 @@ class Trial:
 
 base_case_params = Param()
 
-warm_up_assessment_trial = Trial(base_case_params)
-warm_up_assessment_trial.run_warm_up_assessment_trial()
-warm_up_assessment_trial.calculate_trial_results()
+#warm_up_assessment_trial = Trial(base_case_params)
+#warm_up_assessment_trial.run_warm_up_assessment_trial()
+#warm_up_assessment_trial.calculate_trial_results()
 
-base_case_params = Param()
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
