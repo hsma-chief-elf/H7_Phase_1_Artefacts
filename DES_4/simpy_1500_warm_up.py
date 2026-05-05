@@ -280,6 +280,7 @@ base_case_params = Param()
 #warm_up_assessment_trial.run_warm_up_assessment_trial()
 #warm_up_assessment_trial.calculate_trial_results()
 
+# NEW
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
