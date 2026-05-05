@@ -318,4 +318,76 @@ class Trial:
             model_replication.calculate_run_results(patient_df)
             self.list_of_simulation_replications.append(model_replication)
 
+    def run_warm_up_assessment_trial(self):
+        self.warm_up_trial = True
+        self.list_of_cumulative_mean_dfs = []
+
+        for wu_replication_id in range(
+            self.param.num_replications_warm_up_assessment
+        ):
+            wu_model_replication = Model(self.param, wu_replication_id)
+            wu_model_replication.run_warm_up_assessment()
+            patient_df = wu_model_replication.convert_entity_list_to_dataframe(
+                wu_model_replication.list_of_patients
+            )
+            wu_model_replication.calculate_run_results(patient_df)
+            self.list_of_simulation_replications.append(wu_model_replication)
+            self.list_of_cumulative_mean_dfs.append(
+                wu_model_replication.cumulative_mean_df
+            )
+
+        reference_df = self.list_of_cumulative_mean_dfs[0]
+        x_col = "Simulation Time"
+        y_cols = [
+            col for col in reference_df.columns if col not in [x_col, "id"]
+        ]
+
+        for col in y_cols:
+            fig = go.Figure()
+
+            for i, df in enumerate(
+                self.list_of_cumulative_mean_dfs, start=1
+            ):
+                fig.add_trace(go.Scatter(
+                    x=df[x_col],
+                    y=df[col],
+                    mode="lines",
+                    name=f"replication_{i}",
+                    line=dict(color="lightblue", width=1)
+                ))
+
+            combined = []
+
+            for df in self.list_of_cumulative_mean_dfs:
+                combined.append(df[[x_col, col]])
+
+            df_all_reps = pd.concat(combined)
+
+            df_all_reps = df_all_reps.sort_values(x_col)
+
+            mean_across_reps_df = (
+                df_all_reps.groupby(x_col, as_index=False)[col].mean()
+            )
+
+            mean_across_reps_df["overall_cumulative"] = (
+                mean_across_reps_df[col].expanding().mean()
+            )
+
+            fig.add_trace(go.Scatter(
+                x=mean_across_reps_df[x_col],
+                y=mean_across_reps_df["overall_cumulative"],
+                model="lines",
+                name="overall_mean",
+                line=dict(color="darkblue", width=4)
+            ))
+
+            fig.update_layout(
+                title=f"Cumulative Mean - {col}",
+                xaxis_title=x_col,
+                yaxis_title="Cumulative Mean"
+            )
+
+            fig.show()
+            fig.write_html(f"ed_model_1_cumul_mean_{col}.html")
+
     
