@@ -174,4 +174,67 @@ class Model:
 
             yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
 
+    def attend_ed(self, patient):
+        start_q_reg = self.env.now
+
+        with self.receptionist.request() as req:
+            yield req
+            end_q_reg = self.env.now
+            if self.env.now > self.param.warm_up_period:
+                patient.q_time_reg = end_q_reg - start_q_reg
+            sampled_reg_act_time = self.reg_act_time_dist.sample()
+            yield self.env.timeout(sampled_reg_act_time)
+
+        start_q_triage = self.env.now
+        
+        with self.nurse.request() as req:
+            yield req
+            end_q_triage = self.env.now
+            if self.env.now > self.param.warm_up_period:
+                patient.q_time_triage = end_q_triage - start_q_triage
+            sampled_triage_act_time = self.triage_act_time_dist.sample()
+            yield self.env.timeout(sampled_triage_act_time)
+
+        if (
+            self.triage_pharm_branch_prob_rng.random() <
+            self.param.branch_prob_triage_to_pharm
+        ):
+            start_q_pharm = self.env.now
+
+            with self.pharmacist.request() as req:
+                yield req
+                end_q_pharm = self.env.now
+                if self.env.now > self.param.warm_up_period:
+                    patient.q_time_pharmacy = end_q_pharm - start_q_pharm
+                sampled_pharm_act_time = self.pharm_act_time_dist.sample()
+                yield self.env.timeout(sampled_pharm_act_time)
+
+            # SINK AFTER PHARMACY
+        else:
+            start_q_treat = self.env.now
+
+            with self.doctor.request() as req:
+                yield req
+                end_q_treat = self.env.now
+                if self.env.now > self.param.warm_up_period:
+                    patient.q_time_treat = end_q_treat - start_q_treat
+                sampled_treat_act_time = self.treat_act_time_dist.sample()
+                yield self.env.timeout(sampled_treat_act_time)
+
+            if (
+                self.treat_pharm_branch_prob_rng.random() <
+                self.param.branch_prob_treat_to_pharm
+            ):
+                start_q_pharm = self.env.now
+
+                with self.pharmacist.request() as req:
+                    yield req
+                    end_q_pharm = self.env.now
+                    if self.env.now > self.param.warm_up_period:
+                        patient.q_time_pharmacy = end_q_pharm - start_q_pharm
+                    sampled_pharm_act_time = self.pharm_act_time_dist.sample()
+                    yield self.env.timeout(sampled_pharm_act_time)
+
+                # SINK AFTER PHARMACY
+            
     
