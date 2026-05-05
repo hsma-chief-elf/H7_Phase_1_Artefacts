@@ -228,7 +228,7 @@ class Trial:
                 x=mean_across_reps_df[x_col],
                 y=mean_across_reps_df["overall_cumulative"],
                 mode="lines",
-                name="overall mean",
+                name="overall_mean",
                 line=dict(color="darkblue", width=4)
             ))
             
