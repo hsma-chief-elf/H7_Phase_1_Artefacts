@@ -140,3 +140,13 @@ class Model:
         self.sd_q_time_pharm = pd.NA
         self.perc_90_q_time_pharm = pd.NA
 
+    def generator_patient_arrivals(self):
+        while True:
+            self.patient_counter += 1
+            p = Patient(self.patient_counter)
+            self.list_of_patients.append(p)
+            self.env.process(self.attend_ed(p))
+            sampled_inter = self.patient_inter_dist.sample()
+            yield self.env.timeout(sampled_inter)
+
+    
