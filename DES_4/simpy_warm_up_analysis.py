@@ -268,7 +268,7 @@ class Trial:
             self.trial_sd_q_time_nurse / math.sqrt(total_reps)
         ) # NEW
 
-        t = stats.t.ppf(0.975, df=total_reps-1)
+        t = stats.t.ppf(0.975, df=total_reps-1) # NEW
 
         self.ci_lower_q_time_nurse = (
             self.trial_mean_q_time_nurse - (t * self.se_q_time_nurse)
