@@ -310,6 +310,7 @@ class Trial:
 
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
+            print (f"Replication {replication_id+1}")
             model_replication = Model(self.param, replication_id)
             model_replication.run_model()
             patient_df = model_replication.convert_entity_list_to_dataframe(
@@ -325,6 +326,7 @@ class Trial:
         for wu_replication_id in range(
             self.param.num_replications_warm_up_assessment
         ):
+            print (f"Warm Up Replication {wu_replication_id+1}")
             wu_model_replication = Model(self.param, wu_replication_id)
             wu_model_replication.run_warm_up_assessment()
             patient_df = wu_model_replication.convert_entity_list_to_dataframe(
