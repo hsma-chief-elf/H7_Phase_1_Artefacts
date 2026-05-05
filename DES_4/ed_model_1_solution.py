@@ -237,4 +237,8 @@ class Model:
 
                 # SINK AFTER PHARMACY
             
+    def run_model(self):
+        self.env.process(self.generator_patient_arrivals())
+        self.env.run(until=self.param.sim_duration)
+
     
