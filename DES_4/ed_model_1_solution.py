@@ -241,4 +241,9 @@ class Model:
         self.env.process(self.generator_patient_arrivals())
         self.env.run(until=self.param.sim_duration)
 
+    def run_warm_up_assessment(self):
+        self.env.process(self.generator_patient_arrivals())
+        self.env.process(self.cumulative_mean_tracker())
+        self.env.run(until=self.param.sim_duration_warm_up_assessment)
+
     
