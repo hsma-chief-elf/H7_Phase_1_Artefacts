@@ -149,4 +149,29 @@ class Model:
             sampled_inter = self.patient_inter_dist.sample()
             yield self.env.timeout(sampled_inter)
 
+    def cumulative_mean_tracker(self):
+        yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
+
+        self.cumulative_mean_df = pd.DataFrame(columns=["Simulation Time"])
+
+        while True:
+            if self.list_of_patients:
+                df_patients = pd.DataFrame(
+                    [vars(p) for p in self.list_of_patients]
+                )
+
+                row_of_means = df_patients.mean()
+                row_of_means["Simulation Time"] = self.env.now
+            else:
+                row_of_means = pd.Series(
+                    {"Simulation Time" : self.env.now}
+                )
+
+            self.cumulative_mean_df = pd.concat(
+                [self.cumulative_mean_df, row_of_means.to_frame().T],
+                ignore_index=True
+            )
+
+            yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
+
     
