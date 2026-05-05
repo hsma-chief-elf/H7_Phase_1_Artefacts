@@ -66,3 +66,73 @@ class Param:
             cumulative_mean_tracker_interval
         )
 
+class Model:
+    def __init__(self, param, replication_id):
+        self.param = param
+        self.replication_id = replication_id
+        self.env = simpy.Environment()
+        self.patient_counter = 0
+        self.receptionist = simpy.Resource(
+            self.env,
+            capacity=self.param.num_receptionists
+        )
+        self.nurse = simpy.Resource(
+            self.env,
+            capacity=self.param.num_nurses
+        )
+        self.doctor = simpy.Resource(
+            self.env,
+            capacity=self.param.num_doctors
+        )
+        self.pharmacist = simpy.Resource(
+            self.env,
+            capacity=self.param.num_pharmacists
+        )
+
+        ss = np.random.SeedSequence(self.replication_id)
+        seeds = ss.spawn(7)
+        self.patient_inter_dist = Exponential(
+            mean=self.param.mean_patient_inter,
+            random_seed=seeds[0]
+        )
+        self.reg_act_time_dist = Lognormal(
+            mean=self.param.mean_reg_time,
+            stdev=self.param.sd_reg_time,
+            random_seed=seeds[1]
+        )
+        self.triage_act_time_dist = Lognormal(
+            mean=self.param.mean_triage_time,
+            stdev=self.param.sd_triage_time,
+            random_seed=seeds[2]
+        )
+        self.treat_act_time_dist = Lognormal(
+            mean=self.param.mean_treat_time,
+            stdev=self.param.sd_treat_time,
+            random_seed=seeds[3]
+        )
+        self.pharm_act_time_dist = Lognormal(
+            mean=self.param.mean_pharm_time,
+            stdev=self.param.sd_pharm_time,
+            random_seed=seeds[4]
+        )
+        self.triage_pharm_branch_prob_rng = (
+            np.random.default_rng(seeds[5])
+        )
+        self.treat_pharm_branch_prob_rng = (
+            np.random.default_rng(seeds[6])
+        )
+
+        self.list_of_patients = []
+        self.mean_q_time_reg = pd.NA
+        self.sd_q_time_reg = pd.NA
+        self.perc_90_q_time_reg = pd.NA
+        self.mean_q_time_triage = pd.NA
+        self.sd_q_time_triage = pd.NA
+        self.perc_90_q_time_triage = pd.NA
+        self.mean_q_time_treat = pd.NA
+        self.sd_q_time_treat = pd.NA
+        self.perc_90_q_time_treat = pd.NA
+        self.mean_q_time_pharm = pd.NA
+        self.sd_q_time_pharm = pd.NA
+        self.perc_90_q_time_pharm = pd.NA
+
