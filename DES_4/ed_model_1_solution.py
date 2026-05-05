@@ -247,4 +247,11 @@ class Model:
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
 
+    def convert_entity_list_to_dataframe(self, entity_list):
+        entity_dataframe = pd.DataFrame(
+            entity.__dict__ for entity in entity_list
+        )
+
+        return entity_dataframe
+
     
