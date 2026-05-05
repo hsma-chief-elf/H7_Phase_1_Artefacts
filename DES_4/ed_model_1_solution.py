@@ -390,4 +390,97 @@ class Trial:
             fig.show()
             fig.write_html(f"ed_model_1_cumul_mean_{col}.html")
 
-    
+    def calculate_trial_results(self):
+        if self.warm_up_trial:
+            total_reps = self.param.num_replications_warm_up_assessment
+        else:
+            total_reps = self.param.num_replications
+
+        self.replication_df = pd.DataFrame(
+            replication.__dict__ for replication in
+            self.list_of_simulation_replications
+        )
+
+        self.trial_mean_q_time_reg = (
+            self.replication_df["mean_q_time_reg"].mean()
+        )
+        self.trial_sd_q_time_reg = (
+            self.replication_df["mean_q_time_reg"].std()
+        )
+        self.trial_perc_90_q_time_reg = (
+            self.replication_df["mean_q_time_reg"].quantile(0.9)
+        )
+
+        self.trial_mean_q_time_triage = (
+            self.replication_df["mean_q_time_triage"].mean()
+        )
+        self.trial_sd_q_time_triage = (
+            self.replication_df["mean_q_time_triage"].std()
+        )
+        self.trial_perc_90_q_time_triage = (
+            self.replication_df["mean_q_time_triage"].quantile(0.9)
+        )
+
+        self.trial_mean_q_time_treat = (
+            self.replication_df["mean_q_time_treat"].mean()
+        )
+        self.trial_sd_q_time_treat = (
+            self.replication_df["mean_q_time_treat"].std()
+        )
+        self.trial_perc_90_q_time_treat = (
+            self.replication_df["mean_q_time_treat"].quantile(0.9)
+        )
+
+        self.trial_mean_q_time_pharm = (
+            self.replication_df["mean_q_time_pharm"].mean()
+        )
+        self.trial_sd_q_time_pharm = (
+            self.replication_df["mean_q_time_pharm"].std()
+        )
+        self.trial_perc_90_q_time_pharm = (
+            self.replication_df["mean_q_time_pharm"].quantile(0.9)
+        )
+
+        self.se_q_time_reg = (
+            self.trial_sd_q_time_reg / math.sqrt(total_reps)
+        )
+        self.se_q_time_triage = (
+            self.trial_sd_q_time_triage / math.sqrt(total_reps)
+        )
+        self.se_q_time_treat = (
+            self.trial_sd_q_time_treat / math.sqrt(total_reps)
+        )
+        self.se_q_time_pharm = (
+            self.trial_sd_q_time_pharm / math.sqrt(total_reps)
+        )
+
+        t = stats.t.ppf(0.975, df=total_reps-1)
+
+        self.ci_lower_q_time_reg = (
+            self.trial_mean_q_time_reg - (t * self.se_q_time_reg)
+        )
+        self.ci_upper_q_time_reg = (
+            self.trial_mean_q_time_reg + (t * self.se_q_time_reg)
+        )
+
+        self.ci_lower_q_time_triage = (
+            self.trial_mean_q_time_triage - (t * self.se_q_time_triage)
+        )
+        self.ci_upper_q_time_triage = (
+            self.trial_mean_q_time_triage + (t * self.se_q_time_triage)
+        )
+
+        self.ci_lower_q_time_treat = (
+            self.trial_mean_q_time_treat - (t * self.se_q_time_treat)
+        )
+        self.ci_upper_q_time_treat = (
+            self.trial_mean_q_time_treat + (t * self.se_q_time_treat)
+        )
+
+        self.ci_lower_q_time_pharm = (
+            self.trial_mean_q_time_pharm - (t * self.se_q_time_pharm)
+        )
+        self.ci_upper_q_time_pharm = (
+            self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
+        )
+
