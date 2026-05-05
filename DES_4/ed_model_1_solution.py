@@ -8,7 +8,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 
 class Patient:
-    def __init(self, p_id):
+    def __init__(self, p_id):
         self.id = p_id
 
         self.q_time_reg = pd.NA
