@@ -254,4 +254,26 @@ class Model:
 
         return entity_dataframe
 
-    
+    def calculate_run_results(self, entity_dataframe):
+        self.mean_q_time_reg = entity_dataframe["q_time_reg"].mean()
+        self.sd_q_time_reg = entity_dataframe["q_time_reg"].std()
+        self.perc_90_q_time_reg = entity_dataframe["q_time_reg"].quantile(0.9)
+
+        self.mean_q_time_triage = entity_dataframe["q_time_triage"].mean()
+        self.sd_q_time_triage = entity_dataframe["q_time_triage"].std()
+        self.perc_90_q_time_triage = (
+            entity_dataframe["q_time_triage"].quantile(0.9)
+        )
+
+        self.mean_q_time_treat = entity_dataframe["q_time_treat"].mean()
+        self.sd_q_time_treat = entity_dataframe["q_time_treat"].std()
+        self.perc_90_q_time_treat = (
+            entity_dataframe["q_time_treat"].quantile(0.9)
+        )
+
+        self.mean_q_time_pharm = entity_dataframe["q_time_pharmacy"].mean()
+        self.sd_q_time_pharm = entity_dataframe["q_time_pharmacy"].std()
+        self.perc_90_q_time_pharm = (
+            entity_dataframe["q_time_pharmacy"].quantile(0.9)
+        )
+
