@@ -484,3 +484,9 @@ class Trial:
             self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
         )
 
+base_case_params = Param()
+
+warm_up_assessment_trial = Trial(base_case_params)
+warm_up_assessment_trial.run_warm_up_assessment_trial()
+warm_up_assessment_trial.calculate_trial_results()
+
