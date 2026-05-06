@@ -6,6 +6,7 @@ from scipy import stats
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+from tqdm import tqdm
 
 class Patient:
     def __init__(self, p_id):
@@ -282,8 +283,9 @@ class Model:
         )
 
 class Trial:
-    def __init__(self, param):
+    def __init__(self, param, name_of_trial="Trial"):
         self.param = param
+        self.name_of_trial = name_of_trial
         self.list_of_simulation_replications = []
         self.trial_mean_q_time_reg = pd.NA
         self.trial_sd_q_time_reg = pd.NA
@@ -313,8 +315,11 @@ class Trial:
         self.warm_up_trial = False
 
     def run_trial(self):
-        for replication_id in range(self.param.num_replications):
-            print (f"Replication {replication_id+1}")
+        for replication_id in tqdm(
+            range(self.param.num_replications),
+            desc=f"Running {self.name_of_trial}",
+            unit="replication"
+        ):
             model_replication = Model(self.param, replication_id)
             model_replication.run_model()
             patient_df = model_replication.convert_entity_list_to_dataframe(
@@ -327,10 +332,11 @@ class Trial:
         self.warm_up_trial = True
         self.list_of_cumulative_mean_dfs = []
 
-        for wu_replication_id in range(
-            self.param.num_replications_warm_up_assessment
+        for wu_replication_id in tqdm(
+            range(self.param.num_replications_warm_up_assessment),
+            desc=f"Running {self.name_of_trial}",
+            unit="replication"
         ):
-            print (f"Warm Up Replication {wu_replication_id+1}")
             wu_model_replication = Model(self.param, wu_replication_id)
             wu_model_replication.run_warm_up_assessment()
             patient_df = wu_model_replication.convert_entity_list_to_dataframe(
@@ -492,14 +498,14 @@ class Trial:
 
 base_case_params = Param()
 
-#warm_up_assessment_trial = Trial(base_case_params)
-#warm_up_assessment_trial.run_warm_up_assessment_trial()
-#warm_up_assessment_trial.calculate_trial_results()
+warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
+warm_up_assessment_trial.run_warm_up_assessment_trial()
+warm_up_assessment_trial.calculate_trial_results()
 
-base_case_trial = Trial(base_case_params)
+base_case_trial = Trial(base_case_params, "Base Case")
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
-print ("BASE CASE RESULTS")
+print ({base_case_trial.name_of_trial})
 print ("-----------------")
 print ("Registration")
 print (
@@ -547,11 +553,14 @@ print ()
 
 wi_1_params = Param(mean_patient_inter=3)
 
-wi_1_trial = Trial(wi_1_params)
+wi_1_trial = Trial(
+    wi_1_params,
+    "What If Scenario 1 : Doubled Arrivals, No Resource Change"
+)
 wi_1_trial.run_trial()
 wi_1_trial.calculate_trial_results()
-print ("DOUBLED ARRIVALS, NO RESOURCE CHANGE")
-print ("------------------------------------")
+print (wi_1_trial.name_of_trial)
+print ("-----------------")
 print ("Registration")
 print (
     f"Mean: {wi_1_trial.trial_mean_q_time_reg:.2f} |",
