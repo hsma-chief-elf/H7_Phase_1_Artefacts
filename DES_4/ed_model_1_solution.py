@@ -378,7 +378,7 @@ class Trial:
             fig.add_trace(go.Scatter(
                 x=mean_across_reps_df[x_col],
                 y=mean_across_reps_df["overall_cumulative"],
-                model="lines",
+                mode="lines",
                 name="overall_mean",
                 line=dict(color="darkblue", width=4)
             ))
