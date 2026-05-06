@@ -35,7 +35,7 @@ class Param:
         branch_prob_triage_to_pharm = 0.5,
         branch_prob_treat_to_pharm = 0.4,
         results_collection_period = 2880,
-        warm_up_period = 20,
+        warm_up_period = 10000,
         num_replications = 100,
         num_replications_warm_up_assessment = 20,
         warm_up_assessment_sim_length_scaler = 10,
