@@ -37,7 +37,7 @@ class Param:
         results_collection_period = 2880,
         warm_up_period = 20,
         num_replications = 100,
-        num_replications_warm_up_assessment = 50,
+        num_replications_warm_up_assessment = 20,
         warm_up_assessment_sim_length_scaler = 10,
         cumulative_mean_tracker_interval = 5
     ):
