@@ -531,6 +531,21 @@ wi_2_trial.run_trial()
 wi_2_trial.calculate_trial_results()
 list_of_trials.append(wi_2_trial)
 
+wi_3_params = Param(
+    mean_patient_inter=3,
+    num_receptionists=2,
+    num_nurses=4,
+    num_doctors=8,
+    num_pharmacists=2
+)
+wi_3_trial = Trial(
+    wi_3_params,
+    "What If Scenario 3 : Doubled Arrivals, 2 recep, 4 nurse, 8 doc, 2 pharm"
+)
+wi_3_trial.run_trial()
+wi_3_trial.calculate_trial_results()
+list_of_trials.append(wi_3_trial)
+
 for trial in list_of_trials:
     print (trial.name_of_trial)
     print ("-----------------")
