@@ -39,7 +39,7 @@ class Param:
         num_replications = 100,
         num_replications_warm_up_assessment = 20,
         warm_up_assessment_sim_length_scaler = 10,
-        cumulative_mean_tracker_interval = 5
+        cumulative_mean_tracker_interval = 100
     ):
         self.mean_patient_inter = mean_patient_inter
         self.mean_reg_time = mean_reg_time
@@ -63,8 +63,8 @@ class Param:
         self.num_replications_warm_up_assessment = (
             num_replications_warm_up_assessment
         )
-        self.sim_duration_warm_up_assessment = (
-            self.sim_duration * warm_up_assessment_sim_length_scaler
+        self.warm_up_assessment_sim_length_scaler = (
+            warm_up_assessment_sim_length_scaler
         )
         self.cumulative_mean_tracker_interval = (
             cumulative_mean_tracker_interval
@@ -243,6 +243,10 @@ class Model:
 
     def run_warm_up_assessment(self):
         self.param.warm_up_period = 0
+        self.param.sim_duration_warm_up_assessment = (
+            self.param.results_collection_period *
+            self.param.warm_up_assessment_sim_length_scaler
+        )
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
@@ -488,9 +492,9 @@ class Trial:
 
 base_case_params = Param()
 
-#warm_up_assessment_trial = Trial(base_case_params)
-#warm_up_assessment_trial.run_warm_up_assessment_trial()
-#warm_up_assessment_trial.calculate_trial_results()
+warm_up_assessment_trial = Trial(base_case_params)
+warm_up_assessment_trial.run_warm_up_assessment_trial()
+warm_up_assessment_trial.calculate_trial_results()
 
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
