@@ -488,7 +488,56 @@ class Trial:
 
 base_case_params = Param()
 
-warm_up_assessment_trial = Trial(base_case_params)
-warm_up_assessment_trial.run_warm_up_assessment_trial()
-warm_up_assessment_trial.calculate_trial_results()
+#warm_up_assessment_trial = Trial(base_case_params)
+#warm_up_assessment_trial.run_warm_up_assessment_trial()
+#warm_up_assessment_trial.calculate_trial_results()
+
+base_case_trial = Trial(base_case_params)
+base_case_trial.run_trial()
+base_case_trial.calculate_trial_results()
+print ("BASE CASE RESULTS")
+print ("-----------------")
+print ("Registration")
+print (
+    f"Mean: {base_case_trial.trial_mean_q_time_reg:.2f} |",
+    f"SD: {base_case_trial.trial_sd_q_time_reg:.2f} |",
+    f"90th Perc: {base_case_trial.trial_perc_90_q_time_reg:.2f} |",
+    f"SE: {base_case_trial.se_q_time_reg:.2f} |",
+    f"95% CI: ({base_case_trial.ci_lower_q_time_reg:.2f},",
+    f"{base_case_trial.ci_upper_q_time_reg:.2f})"
+)
+print ()
+
+print ("Triage")
+print (
+    f"Mean: {base_case_trial.trial_mean_q_time_triage:.2f} |",
+    f"SD: {base_case_trial.trial_sd_q_time_triage:.2f} |",
+    f"90th Perc: {base_case_trial.trial_perc_90_q_time_triage:.2f} |",
+    f"SE: {base_case_trial.se_q_time_triage:.2f} |",
+    f"95% CI: ({base_case_trial.ci_lower_q_time_triage:.2f},",
+    f"{base_case_trial.ci_upper_q_time_triage:.2f})"
+)
+print ()
+
+print ("Treatment")
+print (
+    f"Mean: {base_case_trial.trial_mean_q_time_treat:.2f} |",
+    f"SD: {base_case_trial.trial_sd_q_time_treat:.2f} |",
+    f"90th Perc: {base_case_trial.trial_perc_90_q_time_treat:.2f} |",
+    f"SE: {base_case_trial.se_q_time_treat:.2f} |",
+    f"95% CI: ({base_case_trial.ci_lower_q_time_treat:.2f},",
+    f"{base_case_trial.ci_upper_q_time_treat:.2f})"
+)
+print ()
+
+print ("Pharmacy")
+print (
+    f"Mean: {base_case_trial.trial_mean_q_time_pharm:.2f} |",
+    f"SD: {base_case_trial.trial_sd_q_time_pharm:.2f} |",
+    f"90th Perc: {base_case_trial.trial_perc_90_q_time_pharm:.2f} |",
+    f"SE: {base_case_trial.se_q_time_pharm:.2f} |",
+    f"95% CI: ({base_case_trial.ci_lower_q_time_pharm:.2f},",
+    f"{base_case_trial.ci_upper_q_time_pharm:.2f})"
+)
+print ()
 
