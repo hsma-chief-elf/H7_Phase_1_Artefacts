@@ -40,8 +40,8 @@ class Param:
             num_replications_warm_up_assessment
         )
         
-        self.sim_duration_warm_up_assessment = (
-            self.sim_duration * warm_up_asessment_sim_length_scaler
+        self.warm_up_assessment_sim_length_scaler = (
+            warm_up_asessment_sim_length_scaler
         )
         
         self.cumulative_mean_tracker_interval = (
@@ -124,6 +124,10 @@ class Model:
 
     def run_warm_up_assessment(self):
         self.param.warm_up_period = 0
+        self.param.sim_duration_warm_up_assessment = (
+            self.param.results_collection_period *
+            self.param.warm_up_assessment_sim_length_scaler
+        )
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
