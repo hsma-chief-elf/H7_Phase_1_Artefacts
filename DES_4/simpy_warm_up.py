@@ -19,7 +19,7 @@ class Param:
         sd_nurse_consult_time = 1,
         num_nurses = 1,
         results_collection_period = 120, # NEW
-        warm_up_period = 1000000, # NEW
+        warm_up_period = 60, # NEW
         num_replications = 5
     ):
         self.mean_patient_inter = mean_patient_inter
