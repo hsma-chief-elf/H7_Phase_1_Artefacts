@@ -38,7 +38,7 @@ class Param:
         warm_up_period = 20,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
-        warm_up_assessment_sim_length_scaler = 20,
+        warm_up_assessment_sim_length_scaler = 10,
         cumulative_mean_tracker_interval = 5
     ):
         self.mean_patient_inter = mean_patient_inter
