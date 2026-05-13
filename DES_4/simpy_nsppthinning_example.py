@@ -1,11 +1,17 @@
 import simpy
 from sim_tools.distributions import Exponential, Lognormal
+from sim_tools.time_dependent import NSPPThinning # NEW
 import pandas as pd
 import math
 from scipy import stats
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
+import os # NEW
+from pathlib import Path # NEW
+
+# NEW
+os.chdir(Path(__file__).parent)
 
 class Patient:
     def __init__(self, p_id):
@@ -16,18 +22,19 @@ class Patient:
 class Param:
     def __init__(
         self,
-        mean_patient_inter = 7,
+        # REMOVED mean_patient_inter = 7, # NEW
+        patient_iat_csv, # NEW
         mean_nurse_consult_time = 6,
         sd_nurse_consult_time = 1,
         num_nurses = 1,
-        results_collection_period = 120,
-        warm_up_period = 1500, # NEW
+        results_collection_period = 480, # NEW - extended to 8 hours
+        warm_up_period = 1500,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
         warm_up_asessment_sim_length_scaler = 20,
         cumulative_mean_tracker_interval = 5
     ):
-        self.mean_patient_inter = mean_patient_inter
+        # REMOVED self.mean_patient_inter = mean_patient_inter
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
         self.num_nurses = num_nurses
@@ -48,6 +55,14 @@ class Param:
             cumulative_mean_tracker_interval
         )
 
+        # NEW
+        self.pt_arrivals_time_dependent_df = (
+            pd.read_csv(patient_iat_csv)
+        )
+        self.pt_arrivals_time_dependent_df["arrival_rate"] = (
+            self.pt_arrivals_time_dependent_df["mean_iat"].apply(lambda x:1/x)
+        )
+
 class Model:
     def __init__(self, param, replication_id):
         self.param = param
@@ -57,10 +72,18 @@ class Model:
         self.nurse = simpy.Resource(self.env, capacity=self.param.num_nurses)
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(2)
-        self.patient_inter_dist = Exponential(
-            mean=self.param.mean_patient_inter,
-            random_seed=seeds[0]
+        seeds = ss.spawn(3) # NEW - increased from 2 to 3
+        
+        # REMOVED :
+        #self.patient_inter_dist = Exponential(
+        #    mean=self.param.mean_patient_inter,
+        #    random_seed=seeds[0]
+        #)
+        # NEW
+        self.patient_inter_dist = NSPPThinning(
+            data=param.pt_arrivals_time_dependent_df,
+            random_seed1=seeds[0],
+            random_seed2=seeds[2]
         )
         self.nurse_consult_time_dist = Lognormal(
             mean=self.param.mean_nurse_consult_time,
@@ -79,7 +102,12 @@ class Model:
             p = Patient(self.patient_counter)
             self.list_of_patients.append(p)
             self.env.process(self.attend_clinic(p))
-            sampled_inter = self.patient_inter_dist.sample()
+            # NEW - added simulation_time argument to sample function call
+            sampled_inter = self.patient_inter_dist.sample(
+                simulation_time=self.env.now
+            )
+            # NEW
+            print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
             yield self.env.timeout(sampled_inter)
 
     def cumulative_mean_tracker(self):
@@ -279,13 +307,17 @@ class Trial:
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
 
-base_case_params = Param()
+# NEW
+base_case_params = Param(
+    num_replications=1,
+    patient_iat_csv="nspp_example_dataset.csv",
+    warm_up_period=0
+)
 
 #warm_up_assessment_trial = Trial(base_case_params)
 #warm_up_assessment_trial.run_warm_up_assessment_trial()
 #warm_up_assessment_trial.calculate_trial_results()
 
-# NEW
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
@@ -299,22 +331,5 @@ print (f"Standard Error : {base_case_trial.se_q_time_nurse:.2f}")
 print (
     f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f}, ",
     f"{base_case_trial.ci_upper_q_time_nurse:.2f}) minutes"
-)
-print ()
-
-what_if_params = Param(num_nurses=2)
-what_if_trial = Trial(what_if_params)
-what_if_trial.run_trial()
-what_if_trial.calculate_trial_results()
-print ("2 NURSES TRIAL RESULTS")
-print ("----------------------")
-print ("Queuing Time for the Nurse")
-print (f"Mean : {what_if_trial.trial_mean_q_time_nurse:.2f} minutes")
-print (f"SD : {what_if_trial.trial_sd_q_time_nurse:.2f} minutes")
-print (f"90th Perc : {what_if_trial.trial_perc_90_q_time_nurse:.2f} minutes")
-print (f"Standard Error : {what_if_trial.se_q_time_nurse:.2f}")
-print (
-    f"95% CI : ({what_if_trial.ci_lower_q_time_nurse:.2f}, ",
-    f"{what_if_trial.ci_upper_q_time_nurse:.2f}) minutes"
 )
 print ()
