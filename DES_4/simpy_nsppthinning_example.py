@@ -59,9 +59,6 @@ class Param:
         self.pt_arrivals_time_dependent_df = (
             pd.read_csv(patient_iat_csv)
         )
-        self.pt_arrivals_time_dependent_df["arrival_rate"] = (
-            self.pt_arrivals_time_dependent_df["mean_iat"].apply(lambda x:1/x)
-        )
 
 class Model:
     def __init__(self, param, replication_id):
