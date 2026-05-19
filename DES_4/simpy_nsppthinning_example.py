@@ -1,5 +1,5 @@
 import simpy
-from sim_tools.distributions import Exponential, Lognormal
+from sim_tools.distributions import Lognormal # NEW - removed Exponential
 from sim_tools.time_dependent import NSPPThinning # NEW
 import pandas as pd
 import math
