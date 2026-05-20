@@ -423,7 +423,8 @@ class Trial:
             )
 
             fig.show()
-            fig.write_html(f"ed_model_1_cumul_mean_{col}.html")
+            # NEW - renamed file to ed_model_2
+            fig.write_html(f"ed_model_2_cumul_mean_{col}.html")
 
     def calculate_trial_results(self):
         if self.warm_up_trial:
@@ -620,7 +621,7 @@ wi_3_trial = Trial(
 wi_3_trial.run_trial()
 wi_3_trial.calculate_trial_results()
 list_of_trials.append(wi_3_trial)
-
+"""
 for trial in list_of_trials:
     print (trial.name_of_trial)
     print ("-----------------")
@@ -668,4 +669,3 @@ for trial in list_of_trials:
     )
     print ()
 
-"""
