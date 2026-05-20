@@ -571,11 +571,11 @@ class Trial:
 base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv",
 )
-"""
+
 warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
 warm_up_assessment_trial.run_warm_up_assessment_trial()
 warm_up_assessment_trial.calculate_trial_results()
-"""
+
 list_of_trials = []
 
 base_case_trial = Trial(base_case_params, "Base Case")
