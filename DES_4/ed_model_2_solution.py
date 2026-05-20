@@ -1,5 +1,6 @@
 import simpy
-from sim_tools.distributions import Exponential, Lognormal
+from sim_tools.distributions import Lognormal
+from sim_tools.time_dependent import NSPPThinning # NEW
 import pandas as pd
 import math
 from scipy import stats
@@ -7,6 +8,11 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from tqdm import tqdm
+import os # NEW
+from pathlib import Path # NEW
+
+# NEW
+os.chdir(Path(__file__).parent)
 
 class Patient:
     def __init__(self, p_id):
@@ -20,7 +26,7 @@ class Patient:
 class Param:
     def __init__(
         self,
-        mean_patient_inter = 6,
+        patient_iat_csv, # NEW
         mean_reg_time = 4,
         sd_reg_time = 1.2,
         mean_triage_time = 10,
@@ -42,7 +48,6 @@ class Param:
         warm_up_assessment_sim_length_scaler = 10,
         cumulative_mean_tracker_interval = 100
     ):
-        self.mean_patient_inter = mean_patient_inter
         self.mean_reg_time = mean_reg_time
         self.sd_reg_time = sd_reg_time
         self.mean_triage_time = mean_triage_time
@@ -71,6 +76,11 @@ class Param:
             cumulative_mean_tracker_interval
         )
 
+        # NEW
+        self.pt_arrivals_time_dependent_df = (
+            pd.read_csv(patient_iat_csv)
+        )
+
 class Model:
     def __init__(self, param, replication_id):
         self.param = param
@@ -95,11 +105,14 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(7)
-        self.patient_inter_dist = Exponential(
-            mean=self.param.mean_patient_inter,
-            random_seed=seeds[0]
+        seeds = ss.spawn(8) # NEW - increased to 8
+        # NEW
+        self.patient_inter_dist = NSPPThinning(
+            data=param.pt_arrivals_time_dependent_df,
+            random_seed1=seeds[0],
+            random_seed2=seeds[7]
         )
+
         self.reg_act_time_dist = Lognormal(
             mean=self.param.mean_reg_time,
             stdev=self.param.sd_reg_time,
@@ -147,7 +160,11 @@ class Model:
             p = Patient(self.patient_counter)
             self.list_of_patients.append(p)
             self.env.process(self.attend_ed(p))
-            sampled_inter = self.patient_inter_dist.sample()
+            # NEW
+            sampled_inter = self.patient_inter_dist.sample(
+                simulation_time=(self.env.now%1440)
+            )
+            print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
             yield self.env.timeout(sampled_inter)
 
     def cumulative_mean_tracker(self):
@@ -496,19 +513,22 @@ class Trial:
             self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
         )
 
-base_case_params = Param()
-
+base_case_params = Param(
+    num_replications=1,
+    patient_iat_csv="ed_iat_table.csv",
+)
+"""
 warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
 warm_up_assessment_trial.run_warm_up_assessment_trial()
 warm_up_assessment_trial.calculate_trial_results()
-
+"""
 list_of_trials = []
 
 base_case_trial = Trial(base_case_params, "Base Case")
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
 list_of_trials.append(base_case_trial)
-
+"""
 wi_1_params = Param(mean_patient_inter=3)
 wi_1_trial = Trial(
     wi_1_params,
@@ -593,3 +613,4 @@ for trial in list_of_trials:
     )
     print ()
 
+"""
