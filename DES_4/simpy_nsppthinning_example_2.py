@@ -18,6 +18,8 @@ class Patient:
 
         self.q_time_nurse = pd.NA
 
+        self.arrival_time = pd.NA # NEW
+
 class Param:
     def __init__(
         self,
@@ -94,7 +96,8 @@ class Model:
                 simulation_time=self.env.now
             )
 
-            print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
+            # REMOVED
+            #print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
             yield self.env.timeout(sampled_inter)
 
     def cumulative_mean_tracker(self):
@@ -123,6 +126,8 @@ class Model:
             yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
 
     def attend_clinic(self, patient):
+        patient.arrival_time = self.env.now # NEW
+
         start_q_nurse = self.env.now
 
         with self.nurse.request() as req:
@@ -162,6 +167,9 @@ class Model:
         self.perc_90_q_time_nurse = (
             entity_dataframe["q_time_nurse"].quantile(0.9)
         )
+
+        # NEW
+        self.replication_arrival_times = entity_dataframe["arrival_time"]
 
 class Trial:
     def __init__(self, param):
@@ -294,8 +302,57 @@ class Trial:
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
 
+    # NEW
+    def plot_arrival_time_frequencies(self):
+        self.arrival_times_df = pd.DataFrame(
+            columns=["arrival_time"]
+        )
+
+        for replication in self.list_of_simulation_replications:
+            self.arrival_times_df = pd.concat(
+                [
+                    self.arrival_times_df,
+                    replication.replication_arrival_times.to_frame()
+                ],
+                ignore_index=True
+            )
+
+        self.arrival_times_df["arr_time_bins"] = (
+            pd.cut(
+                self.arrival_times_df["arrival_time"],
+                bins=[i for i in range(0, self.param.sim_duration+1, 60)],
+                include_lowest=True,
+                right=False
+            )
+        )
+
+        self.arrival_times_df_grouped = (
+            self.arrival_times_df
+            .groupby("arr_time_bins")
+            .count()
+            .reset_index()
+        )
+
+        self.arrival_times_df_grouped["arr_times_bins_str"] = (
+            self.arrival_times_df_grouped["arr_time_bins"].astype("str")
+        )
+
+        self.arrival_times_df_grouped["mean_arrivals_in_period_per_rep"] = (
+            self.arrival_times_df_grouped["arrival_time"] /
+            self.param.num_replications
+        )
+
+        fig = px.line(
+            self.arrival_times_df_grouped,
+            x="arr_times_bins_str",
+            y="mean_arrivals_in_period_per_rep"
+        )
+
+        fig.show()
+        fig.write_html("clinic_arrival_time_frequencies.html")
+
 base_case_params = Param(
-    num_replications=1,
+    # REMOVED num_replications=1,
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0
 )
@@ -307,6 +364,7 @@ base_case_params = Param(
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
+base_case_trial.plot_arrival_time_frequencies() # NEW
 print ("BASE CASE TRIAL RESULTS")
 print ("-----------------------")
 print ("Queuing Time for the Nurse")
