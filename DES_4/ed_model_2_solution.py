@@ -581,7 +581,7 @@ list_of_trials = []
 base_case_trial = Trial(base_case_params, "Base Case")
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
-base_case_trial.plot_arrival_time_frequencies()
+base_case_trial.plot_arrival_time_frequencies() # NEW
 list_of_trials.append(base_case_trial)
 """
 wi_1_params = Param(mean_patient_inter=3)
