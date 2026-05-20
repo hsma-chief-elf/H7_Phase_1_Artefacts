@@ -374,7 +374,11 @@ class Trial:
         reference_df = self.list_of_cumulative_mean_dfs[0]
         x_col = "Simulation Time"
         y_cols = [
-            col for col in reference_df.columns if col not in [x_col, "id"]
+            col for col in reference_df.columns if col not in [
+                x_col,
+                "id",
+                "arrival_time"
+            ]
         ]
 
         for col in y_cols:
