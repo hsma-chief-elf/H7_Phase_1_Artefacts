@@ -1,16 +1,15 @@
 import simpy
-from sim_tools.distributions import Lognormal # NEW - removed Exponential
-from sim_tools.time_dependent import NSPPThinning # NEW
+from sim_tools.distributions import Lognormal
+from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 import math
 from scipy import stats
 import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
-import os # NEW
-from pathlib import Path # NEW
+import os
+from pathlib import Path
 
-# NEW
 os.chdir(Path(__file__).parent)
 
 class Patient:
@@ -22,19 +21,17 @@ class Patient:
 class Param:
     def __init__(
         self,
-        # REMOVED mean_patient_inter = 7, # NEW
-        patient_iat_csv, # NEW
+        patient_iat_csv,
         mean_nurse_consult_time = 6,
         sd_nurse_consult_time = 1,
         num_nurses = 1,
-        results_collection_period = 480, # NEW - extended to 8 hours
+        results_collection_period = 480,
         warm_up_period = 1500,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
         warm_up_asessment_sim_length_scaler = 20,
         cumulative_mean_tracker_interval = 5
     ):
-        # REMOVED self.mean_patient_inter = mean_patient_inter
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
         self.num_nurses = num_nurses
@@ -55,7 +52,6 @@ class Param:
             cumulative_mean_tracker_interval
         )
 
-        # NEW
         self.pt_arrivals_time_dependent_df = (
             pd.read_csv(patient_iat_csv)
         )
@@ -69,14 +65,8 @@ class Model:
         self.nurse = simpy.Resource(self.env, capacity=self.param.num_nurses)
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(3) # NEW - increased from 2 to 3
+        seeds = ss.spawn(3)
         
-        # REMOVED :
-        #self.patient_inter_dist = Exponential(
-        #    mean=self.param.mean_patient_inter,
-        #    random_seed=seeds[0]
-        #)
-        # NEW
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
             random_seed1=seeds[0],
@@ -99,11 +89,11 @@ class Model:
             p = Patient(self.patient_counter)
             self.list_of_patients.append(p)
             self.env.process(self.attend_clinic(p))
-            # NEW - added simulation_time argument to sample function call
+
             sampled_inter = self.patient_inter_dist.sample(
                 simulation_time=self.env.now
             )
-            # NEW
+
             print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
             yield self.env.timeout(sampled_inter)
 
@@ -304,7 +294,6 @@ class Trial:
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
 
-# NEW
 base_case_params = Param(
     num_replications=1,
     patient_iat_csv="nspp_example_dataset.csv",
