@@ -573,8 +573,10 @@ class Trial:
         fig.show()
         fig.write_html("ed_arrival_time_frequencies.html")
 
+# NEW
 base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv",
+    warm_up_period=20000
 )
 
 warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
