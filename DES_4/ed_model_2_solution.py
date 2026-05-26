@@ -588,46 +588,26 @@ list_of_trials = []
 base_case_trial = Trial(base_case_params, "Base Case")
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
-base_case_trial.plot_arrival_time_frequencies() # NEW
+base_case_trial.plot_arrival_time_frequencies()
 list_of_trials.append(base_case_trial)
-"""
-wi_1_params = Param(mean_patient_inter=3)
+
+wi_1_params = Param(
+    warm_up_period=20000,
+    num_receptionists=2,
+    num_nurses=5,
+    num_doctors=8,
+    num_pharmacists=2,
+    patient_iat_csv="ed_iat_table.csv"
+)
+
 wi_1_trial = Trial(
     wi_1_params,
-    "What If Scenario 1 : Doubled Arrivals, No Resource Change"
+    "What If Scenario 1 : 2 Receptionists, 3 Nurses"
 )
 wi_1_trial.run_trial()
 wi_1_trial.calculate_trial_results()
 list_of_trials.append(wi_1_trial)
 
-wi_2_params = Param(
-    mean_patient_inter=3,
-    num_receptionists=2,
-    num_nurses=3
-)
-wi_2_trial = Trial(
-    wi_2_params,
-    "What If Scenario 2 : Doubled Arrivals, 2 Recep., 3 Nurses"
-)
-wi_2_trial.run_trial()
-wi_2_trial.calculate_trial_results()
-list_of_trials.append(wi_2_trial)
-
-wi_3_params = Param(
-    mean_patient_inter=3,
-    num_receptionists=2,
-    num_nurses=4,
-    num_doctors=8,
-    num_pharmacists=2
-)
-wi_3_trial = Trial(
-    wi_3_params,
-    "What If Scenario 3 : Doubled Arrivals, 2 recep, 4 nurse, 8 doc, 2 pharm"
-)
-wi_3_trial.run_trial()
-wi_3_trial.calculate_trial_results()
-list_of_trials.append(wi_3_trial)
-"""
 for trial in list_of_trials:
     print (trial.name_of_trial)
     print ("-----------------")
