@@ -26,15 +26,15 @@ class Param:
         patient_iat_csv,
         mean_nurse_consult_time = 6,
         sd_nurse_consult_time = 1,
-        num_nurses = 2, # NEW - changed default to 2 nurses for this example
+        num_nurses = 2,
         results_collection_period = 480,
         warm_up_period = 1500,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
         warm_up_asessment_sim_length_scaler = 20,
         cumulative_mean_tracker_interval = 5,
-        nurse_unav_time = 60, # NEW
-        nurse_unav_freq = 120 # NEW
+        nurse_unav_time = 60,
+        nurse_unav_freq = 120
     ):
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
@@ -60,7 +60,6 @@ class Param:
             pd.read_csv(patient_iat_csv)
         )
 
-        # NEW
         self.nurse_unav_time = nurse_unav_time
         self.nurse_unav_freq = nurse_unav_freq
 
@@ -70,7 +69,7 @@ class Model:
         self.replication_id = replication_id
         self.env = simpy.Environment()
         self.patient_counter = 0
-        # NEW - changed Nurse resource to PriorityResource
+
         self.nurse = simpy.PriorityResource(
             self.env, capacity=self.param.num_nurses
         )
@@ -107,7 +106,6 @@ class Model:
 
             yield self.env.timeout(sampled_inter)
 
-    # NEW
     def obstruct_nurse(self):
         while True:
             yield self.env.timeout(self.param.nurse_unav_freq)
@@ -173,7 +171,7 @@ class Model:
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
-        self.env.process(self.obstruct_nurse()) # NEW
+        self.env.process(self.obstruct_nurse())
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
@@ -390,7 +388,7 @@ class Trial:
 base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0,
-    num_replications=1 # NEW - run with 1 rep for example
+    num_replications=1
 )
 
 #warm_up_assessment_trial = Trial(base_case_params)
