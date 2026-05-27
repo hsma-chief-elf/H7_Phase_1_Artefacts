@@ -18,7 +18,7 @@ class Patient:
 
         self.q_time_nurse = pd.NA
 
-        self.arrival_time = pd.NA # NEW
+        self.arrival_time = pd.NA
 
 class Param:
     def __init__(
@@ -96,8 +96,6 @@ class Model:
                 simulation_time=self.env.now
             )
 
-            # REMOVED
-            #print (f"Time {self.env.now:.2f}: next pt in {sampled_inter:.2f}")
             yield self.env.timeout(sampled_inter)
 
     def cumulative_mean_tracker(self):
@@ -126,7 +124,7 @@ class Model:
             yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
 
     def attend_clinic(self, patient):
-        patient.arrival_time = self.env.now # NEW
+        patient.arrival_time = self.env.now
 
         start_q_nurse = self.env.now
 
@@ -168,7 +166,6 @@ class Model:
             entity_dataframe["q_time_nurse"].quantile(0.9)
         )
 
-        # NEW
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
 class Trial:
@@ -213,7 +210,6 @@ class Trial:
 
         reference_df = self.list_of_cumulative_mean_dfs[0]
         x_col = "Simulation Time"
-        # NEW - added "arrival_time" as a column to drop
         y_cols = [
             col for col in reference_df.columns if col not in [
                 x_col,
@@ -307,7 +303,6 @@ class Trial:
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
 
-    # NEW
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -357,7 +352,6 @@ class Trial:
         fig.write_html("clinic_arrival_time_frequencies.html")
 
 base_case_params = Param(
-    # REMOVED num_replications=1,
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0
 )
@@ -369,7 +363,7 @@ base_case_params = Param(
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
-base_case_trial.plot_arrival_time_frequencies() # NEW
+base_case_trial.plot_arrival_time_frequencies()
 print ("BASE CASE TRIAL RESULTS")
 print ("-----------------------")
 print ("Queuing Time for the Nurse")
