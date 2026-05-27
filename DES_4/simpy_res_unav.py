@@ -26,13 +26,15 @@ class Param:
         patient_iat_csv,
         mean_nurse_consult_time = 6,
         sd_nurse_consult_time = 1,
-        num_nurses = 1,
+        num_nurses = 2, # NEW - changed default to 2 nurses for this example
         results_collection_period = 480,
         warm_up_period = 1500,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
         warm_up_asessment_sim_length_scaler = 20,
-        cumulative_mean_tracker_interval = 5
+        cumulative_mean_tracker_interval = 5,
+        nurse_unav_time = 60, # NEW
+        nurse_unav_freq = 120 # NEW
     ):
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
@@ -58,13 +60,20 @@ class Param:
             pd.read_csv(patient_iat_csv)
         )
 
+        # NEW
+        self.nurse_unav_time = nurse_unav_time
+        self.nurse_unav_freq = nurse_unav_freq
+
 class Model:
     def __init__(self, param, replication_id):
         self.param = param
         self.replication_id = replication_id
         self.env = simpy.Environment()
         self.patient_counter = 0
-        self.nurse = simpy.Resource(self.env, capacity=self.param.num_nurses)
+        # NEW - changed Nurse resource to PriorityResource
+        self.nurse = simpy.PriorityResource(
+            self.env, capacity=self.param.num_nurses
+        )
 
         ss = np.random.SeedSequence(self.replication_id)
         seeds = ss.spawn(3)
@@ -97,6 +106,32 @@ class Model:
             )
 
             yield self.env.timeout(sampled_inter)
+
+    # NEW
+    def obstruct_nurse(self):
+        while True:
+            yield self.env.timeout(self.param.nurse_unav_freq)
+
+            time_should_go = self.env.now
+            print (f"A nurse should go at {time_should_go:.2f}")
+
+            with self.nurse.request(priority=-1) as req:
+                yield req
+
+                time_went = self.env.now
+                print (f"A nurse went at {time_went:.2f}")
+
+                time_away = (
+                    self.param.nurse_unav_time - (
+                        time_went - time_should_go
+                    )
+                )
+
+                print (
+                    f"They will be back at {(self.env.now + time_away):.2f}"
+                )
+
+                yield self.env.timeout(time_away)
 
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
@@ -138,6 +173,7 @@ class Model:
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
+        self.env.process(self.obstruct_nurse()) # NEW
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
@@ -353,7 +389,8 @@ class Trial:
 
 base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
-    warm_up_period=0
+    warm_up_period=0,
+    num_replications=1 # NEW - run with 1 rep for example
 )
 
 #warm_up_assessment_trial = Trial(base_case_params)
