@@ -24,9 +24,9 @@ class Param:
     def __init__(
         self,
         patient_iat_csv,
-        mean_nurse_consult_time = 12,
+        mean_nurse_consult_time = 12, # NEW - extended from 6 to 12 for example
         sd_nurse_consult_time = 1,
-        num_nurses = 3,
+        num_nurses = 3, # NEW - updated to 3 for example
         results_collection_period = 480,
         warm_up_period = 1500,
         num_replications = 100,
@@ -35,7 +35,7 @@ class Param:
         cumulative_mean_tracker_interval = 5,
         nurse_unav_time = 60,
         nurse_unav_freq = 120,
-        num_nurses_unav = 2
+        num_nurses_unav = 2 # NEW
     ):
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
@@ -63,7 +63,7 @@ class Param:
 
         self.nurse_unav_time = nurse_unav_time
         self.nurse_unav_freq = nurse_unav_freq
-        self.num_nurses_unav = num_nurses_unav
+        self.num_nurses_unav = num_nurses_unav # NEW
 
 class Model:
     def __init__(self, param, replication_id):
@@ -108,6 +108,7 @@ class Model:
 
             yield self.env.timeout(sampled_inter)
 
+    # NEW
     def obstruct_nurse(self):
         while True:
             yield self.env.timeout(self.param.nurse_unav_freq)
