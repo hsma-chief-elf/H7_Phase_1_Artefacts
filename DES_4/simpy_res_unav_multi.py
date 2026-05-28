@@ -116,7 +116,7 @@ class Model:
             time_should_go = self.env.now
             
             print (
-                f"{self.param.num_nurses_unav} nurses should go at ",
+                f"{self.param.num_nurses_unav} nurses should go at",
                 f"{time_should_go:.2f}"
             )
 
