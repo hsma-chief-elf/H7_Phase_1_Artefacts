@@ -108,43 +108,45 @@ class Model:
 
             yield self.env.timeout(sampled_inter)
 
+    # NEW
     def obstruct_nurse(self):
-        while True:
-            yield self.env.timeout(self.param.nurse_unav_freq)
+        next_departure_time = self.param.nurse_unav_freq
 
-            time_should_go = self.env.now
-            
+        while True:
+            yield self.env.timeout(
+                next_departure_time - self.env.now
+            )
+
+            time_should_go = next_departure_time
+            time_to_return = time_should_go + self.param.nurse_unav_time
+
             print (
-                f"{self.param.num_nurses_unav} nurses should go at ",
+                f"{self.param.num_nurses_unav} nurses should go at",
                 f"{time_should_go:.2f}"
             )
 
-            reqs = [
-                self.nurse.request(priority=-1)
-                for removal_candidate in range(self.param.num_nurses_unav)
-            ]
-
-            yield simpy.events.AllOf(self.env, reqs)
-
-            time_went = self.env.now
-            print (
-                f"{self.param.num_nurses_unav} nurses went at {time_went:.2f}"
-            )
-
-            time_away = (
-                self.param.nurse_unav_time - (
-                    time_went - time_should_go
+            for removal_candidate in range(self.param.num_nurses_unav):
+                self.env.process(
+                    self.remove_one_nurse(
+                        time_to_return
+                    )
                 )
+            
+            next_departure_time += (
+                self.param.nurse_unav_freq
             )
 
-            print (
-                f"They will be back at {(self.env.now + time_away):.2f}"
-            )
+    # NEW
+    def remove_one_nurse(self, time_to_return):
+        req = self.nurse.request(priority=-1)
+        yield req
+        time_went = self.env.now
+        print (f"A nurse went at {time_went:.2f}")
 
-            yield self.env.timeout(time_away)
-
-            for req in reqs:
-                self.nurse.release(req)
+        time_away = time_to_return - time_went
+        yield self.env.timeout(time_away)
+        self.nurse.release(req)
+        print (f"A nurse returned at {self.env.now:.2f}")
 
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
