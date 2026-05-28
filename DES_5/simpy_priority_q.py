@@ -108,7 +108,6 @@ class Model:
 
             yield self.env.timeout(sampled_inter)
 
-    # NEW
     def obstruct_nurse(self):
         next_departure_time = self.param.nurse_unav_freq
 
@@ -136,7 +135,6 @@ class Model:
                 self.param.nurse_unav_freq
             )
 
-    # NEW
     def remove_one_nurse(self, time_to_return):
         req = self.nurse.request(priority=-1)
         yield req
