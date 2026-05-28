@@ -13,12 +13,11 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id):
+    def __init__(self, p_id, priority): # NEW
         self.id = p_id
-
         self.q_time_nurse = pd.NA
-
         self.arrival_time = pd.NA
+        self.priority = priority # NEW
 
 class Param:
     def __init__(
@@ -77,7 +76,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(3)
+        seeds = ss.spawn(4) # NEW - added extra seed spawn
         
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -89,6 +88,10 @@ class Model:
             stdev=self.param.sd_nurse_consult_time,
             random_seed=seeds[1]
         )
+        # NEW
+        self.patient_priority_rng = (
+            np.random.default_rng(seeds[3])
+        )
 
         self.list_of_patients = []
         self.mean_q_time_nurse = pd.NA
@@ -98,7 +101,16 @@ class Model:
     def generator_patient_arrivals(self):
         while True:
             self.patient_counter += 1
-            p = Patient(self.patient_counter)
+
+            # NEW
+            if self.patient_priority_rng.random() < 0.2:
+                patient_priority = 1
+            elif self.patient_priority_rng.random() < 0.5:
+                patient_priority = 2
+            else:
+                patient_priority = 3
+
+            p = Patient(self.patient_counter, patient_priority) # NEW
             self.list_of_patients.append(p)
             self.env.process(self.attend_clinic(p))
 
@@ -176,7 +188,7 @@ class Model:
 
         start_q_nurse = self.env.now
 
-        with self.nurse.request() as req:
+        with self.nurse.request(priority=patient.priority) as req: # NEW
             yield req
             end_q_nurse = self.env.now
             if self.env.now > self.param.warm_up_period:
