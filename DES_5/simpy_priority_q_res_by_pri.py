@@ -97,6 +97,17 @@ class Model:
         self.sd_q_time_nurse = pd.NA
         self.perc_90_q_time_nurse = pd.NA
 
+        # NEW
+        self.mean_q_time_nurse_pri_1 = pd.NA
+        self.mean_q_time_nurse_pri_2 = pd.NA
+        self.mean_q_time_nurse_pri_3 = pd.NA
+        self.sd_q_time_nurse_pri_1 = pd.NA
+        self.sd_q_time_nurse_pri_2 = pd.NA
+        self.sd_q_time_nurse_pri_3 = pd.NA
+        self.perc_90_q_time_nurse_pri_1 = pd.NA
+        self.perc_90_q_time_nurse_pri_2 = pd.NA
+        self.perc_90_q_time_nurse_pri_3 = pd.NA
+
     def generator_patient_arrivals(self):
         while True:
             self.patient_counter += 1
@@ -238,6 +249,62 @@ class Model:
 
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
+        # NEW
+        self.mean_q_time_nurse_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_nurse"
+            ].mean()
+        )
+        self.mean_q_time_nurse_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_nurse"
+            ].mean()
+        )
+        self.mean_q_time_nurse_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_nurse"
+            ].mean()
+        )
+        self.sd_q_time_nurse_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_nurse"
+            ].std()
+        )
+        self.sd_q_time_nurse_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_nurse"
+            ].std()
+        )
+        self.sd_q_time_nurse_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_nurse"
+            ].std()
+        )
+        self.perc_90_q_time_nurse_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_nurse"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_nurse_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_nurse"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_nurse_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_nurse"
+            ].quantile(0.9)
+        )
+
 class Trial:
     def __init__(self, param):
         self.param = param
@@ -249,6 +316,25 @@ class Trial:
         self.ci_upper_q_time_nurse = pd.NA
         self.se_q_time_nurse = pd.NA
         self.warm_up_trial = False
+        # NEW
+        self.trial_mean_q_time_nurse_pri_1 = pd.NA
+        self.trial_mean_q_time_nurse_pri_2 = pd.NA
+        self.trial_mean_q_time_nurse_pri_3 = pd.NA
+        self.trial_sd_q_time_nurse_pri_1 = pd.NA
+        self.trial_sd_q_time_nurse_pri_2 = pd.NA
+        self.trial_sd_q_time_nurse_pri_3 = pd.NA
+        self.trial_perc_90_q_time_nurse_pri_1 = pd.NA
+        self.trial_perc_90_q_time_nurse_pri_2 = pd.NA
+        self.trial_perc_90_q_time_nurse_pri_3 = pd.NA
+        self.se_q_time_nurse_pri_1 = pd.NA
+        self.se_q_time_nurse_pri_2 = pd.NA
+        self.se_q_time_nurse_pri_3 = pd.NA
+        self.ci_lower_q_time_nurse_pri_1 = pd.NA
+        self.ci_lower_q_time_nurse_pri_2 = pd.NA
+        self.ci_lower_q_time_nurse_pri_3 = pd.NA
+        self.ci_upper_q_time_nurse_pri_1 = pd.NA
+        self.ci_upper_q_time_nurse_pri_2 = pd.NA
+        self.ci_upper_q_time_nurse_pri_3 = pd.NA
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -372,6 +458,76 @@ class Trial:
         self.ci_upper_q_time_nurse = (
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
+
+        # NEW
+        self.trial_mean_q_time_nurse_pri_1 = (
+            self.replication_df["mean_q_time_nurse_pri_1"].mean()
+        )
+        self.trial_mean_q_time_nurse_pri_2 = (
+            self.replication_df["mean_q_time_nurse_pri_2"].mean()
+        )
+        self.trial_mean_q_time_nurse_pri_3 = (
+            self.replication_df["mean_q_time_nurse_pri_3"].mean()
+        )
+        self.trial_sd_q_time_nurse_pri_1 = (
+            self.replication_df["sd_q_time_nurse_pri_1"].std()
+        )
+        self.trial_sd_q_time_nurse_pri_2 = (
+            self.replication_df["sd_q_time_nurse_pri_2"].std()
+        )
+        self.trial_sd_q_time_nurse_pri_3 = (
+            self.replication_df["sd_q_time_nurse_pri_3"].std()
+        )
+        self.trial_perc_90_q_time_nurse_pri_1 = (
+            self.replication_df["perc_90_q_time_nurse_pri_1"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_nurse_pri_2 = (
+            self.replication_df["perc_90_q_time_nurse_pri_2"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_nurse_pri_3 = (
+            self.replication_df["perc_90_q_time_nurse_pri_3"].quantile(0.9)
+        )
+        self.se_q_time_nurse_pri_1 = (
+            self.trial_sd_q_time_nurse_pri_1 / math.sqrt(total_reps)
+        )
+        self.se_q_time_nurse_pri_2 = (
+            self.trial_sd_q_time_nurse_pri_2 / math.sqrt(total_reps)
+        )
+        self.se_q_time_nurse_pri_3 = (
+            self.trial_sd_q_time_nurse_pri_3 / math.sqrt(total_reps)
+        )
+        self.ci_lower_q_time_nurse_pri_1 = (
+            self.trial_mean_q_time_nurse_pri_1 - (
+                t * self.se_q_time_nurse_pri_1
+            )
+        )
+        self.ci_upper_q_time_nurse_pri_1 = (
+            self.trial_mean_q_time_nurse_pri_1 + (
+                t * self.se_q_time_nurse_pri_1
+            )
+        )
+        self.ci_lower_q_time_nurse_pri_2 = (
+            self.trial_mean_q_time_nurse_pri_2 - (
+                t * self.se_q_time_nurse_pri_2
+            )
+        )
+        self.ci_upper_q_time_nurse_pri_2 = (
+            self.trial_mean_q_time_nurse_pri_2 + (
+                t * self.se_q_time_nurse_pri_2
+            )
+        )
+        self.ci_lower_q_time_nurse_pri_3 = (
+            self.trial_mean_q_time_nurse_pri_3 - (
+                t * self.se_q_time_nurse_pri_3
+            )
+        )
+        self.ci_upper_q_time_nurse_pri_3 = (
+            self.trial_mean_q_time_nurse_pri_3 + (
+                t * self.se_q_time_nurse_pri_3
+            )
+        )
+
+        ##### add print messages to outputs at bottom for new results
 
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
