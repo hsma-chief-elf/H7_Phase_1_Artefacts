@@ -188,9 +188,22 @@ class Model:
 
         start_q_nurse = self.env.now
 
+        # NEW
+        print (
+            f"Patient {patient.id} (Priority {patient.priority})",
+            "is queuing for the nurse"
+        )
+
         with self.nurse.request(priority=patient.priority) as req: # NEW
             yield req
             end_q_nurse = self.env.now
+
+            # NEW
+            print (
+                f"Patient {patient.id} (Priority {patient.priority})",
+                "is being seen by the nurse"
+            )
+
             if self.env.now > self.param.warm_up_period:
                 patient.q_time_nurse = end_q_nurse - start_q_nurse
             sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
