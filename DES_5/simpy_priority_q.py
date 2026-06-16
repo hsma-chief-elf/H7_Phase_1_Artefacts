@@ -428,7 +428,9 @@ class Trial:
 base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0,
-    num_replications=1
+    num_replications=1,
+    num_nurses=1, # NEW - run with just one nurse for this example
+    num_nurses_unav=0 # NEW - switch off nurse obstruction for this example
 )
 
 #warm_up_assessment_trial = Trial(base_case_params)
