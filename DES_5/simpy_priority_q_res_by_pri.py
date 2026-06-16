@@ -13,11 +13,11 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id, priority): # NEW
+    def __init__(self, p_id, priority):
         self.id = p_id
         self.q_time_nurse = pd.NA
         self.arrival_time = pd.NA
-        self.priority = priority # NEW
+        self.priority = priority
 
 class Param:
     def __init__(
@@ -76,7 +76,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(4) # NEW - added extra seed spawn
+        seeds = ss.spawn(4)
         
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -88,7 +88,6 @@ class Model:
             stdev=self.param.sd_nurse_consult_time,
             random_seed=seeds[1]
         )
-        # NEW
         self.patient_priority_rng = (
             np.random.default_rng(seeds[3])
         )
@@ -102,7 +101,6 @@ class Model:
         while True:
             self.patient_counter += 1
 
-            # NEW
             if self.patient_priority_rng.random() < 0.2:
                 patient_priority = 1
             elif self.patient_priority_rng.random() < 0.5:
@@ -110,7 +108,7 @@ class Model:
             else:
                 patient_priority = 3
 
-            p = Patient(self.patient_counter, patient_priority) # NEW
+            p = Patient(self.patient_counter, patient_priority)
             self.list_of_patients.append(p)
             self.env.process(self.attend_clinic(p))
 
@@ -188,17 +186,15 @@ class Model:
 
         start_q_nurse = self.env.now
 
-        # NEW
         print (
             f"Patient {patient.id} (Priority {patient.priority})",
             "is queuing for the nurse"
         )
 
-        with self.nurse.request(priority=patient.priority) as req: # NEW
+        with self.nurse.request(priority=patient.priority) as req:
             yield req
             end_q_nurse = self.env.now
 
-            # NEW
             print (
                 f"Patient {patient.id} (Priority {patient.priority})",
                 "is being seen by the nurse"
@@ -429,8 +425,8 @@ base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0,
     num_replications=1,
-    num_nurses=1, # NEW - run with just one nurse for this example
-    num_nurses_unav=0 # NEW - switch off nurse obstruction for this example
+    num_nurses=1,
+    num_nurses_unav=0
 )
 
 #warm_up_assessment_trial = Trial(base_case_params)
