@@ -527,8 +527,6 @@ class Trial:
             )
         )
 
-        ##### add print messages to outputs at bottom for new results
-
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -580,7 +578,7 @@ class Trial:
 base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0,
-    num_replications=1,
+    #num_replications=1, # NEW - removed number of replications override
     num_nurses=1,
     num_nurses_unav=0
 )
@@ -593,15 +591,50 @@ base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
+
+# NEW
 print ("BASE CASE TRIAL RESULTS")
 print ("-----------------------")
-print ("Queuing Time for the Nurse")
-print (f"Mean : {base_case_trial.trial_mean_q_time_nurse:.2f} minutes")
-print (f"SD : {base_case_trial.trial_sd_q_time_nurse:.2f} minutes")
-print (f"90th Perc : {base_case_trial.trial_perc_90_q_time_nurse:.2f} minutes")
-print (f"Standard Error : {base_case_trial.se_q_time_nurse:.2f}")
+print ("Queuing Time for the Nurse (ALL, P1, P2, P3)")
 print (
-    f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f}, ",
-    f"{base_case_trial.ci_upper_q_time_nurse:.2f}) minutes"
+    f"Mean : {base_case_trial.trial_mean_q_time_nurse:.2f},",
+    f"{base_case_trial.trial_mean_q_time_nurse_pri_1:.2f},",
+    f"{base_case_trial.trial_mean_q_time_nurse_pri_2:.2f},",
+    f"{base_case_trial.trial_mean_q_time_nurse_pri_3:.2f}",
+    "minutes"
 )
+print (
+    f"SD : {base_case_trial.trial_sd_q_time_nurse:.2f},",
+    f"{base_case_trial.trial_sd_q_time_nurse_pri_1:.2f},",
+    f"{base_case_trial.trial_sd_q_time_nurse_pri_2:.2f},",
+    f"{base_case_trial.trial_sd_q_time_nurse_pri_3:.2f}",
+    "minutes"
+)
+print (
+    f"90th Perc : {base_case_trial.trial_perc_90_q_time_nurse:.2f},",
+    f"{base_case_trial.trial_perc_90_q_time_nurse_pri_1:.2f},",
+    f"{base_case_trial.trial_perc_90_q_time_nurse_pri_2:.2f},",
+    f"{base_case_trial.trial_perc_90_q_time_nurse_pri_3:.2f}",
+    "minutes"
+)
+
+print (
+    f"Standard Error : {base_case_trial.se_q_time_nurse:.2f},",
+    f"{base_case_trial.se_q_time_nurse_pri_1:.2f},",
+    f"{base_case_trial.se_q_time_nurse_pri_2:.2f},",
+    f"{base_case_trial.se_q_time_nurse_pri_3:.2f}"
+)
+
+print (
+    f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f},"
+    f"{base_case_trial.ci_upper_q_time_nurse:.2f}),",
+    f"({base_case_trial.ci_lower_q_time_nurse_pri_1:.2f},",
+    f"{base_case_trial.ci_upper_q_time_nurse_pri_1:.2f})",
+    f"({base_case_trial.ci_lower_q_time_nurse_pri_2:.2f},",
+    f"{base_case_trial.ci_upper_q_time_nurse_pri_2:.2f})",
+    f"({base_case_trial.ci_lower_q_time_nurse_pri_3:.2f},",
+    f"{base_case_trial.ci_upper_q_time_nurse_pri_3:.2f})",
+    "minutes"
+)
+
 print ()
