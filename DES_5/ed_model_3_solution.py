@@ -1,6 +1,6 @@
 import simpy
 from sim_tools.distributions import Lognormal
-from sim_tools.time_dependent import NSPPThinning # NEW
+from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 import math
 from scipy import stats
@@ -8,10 +8,9 @@ import numpy as np
 import plotly.express as px
 import plotly.graph_objects as go
 from tqdm import tqdm
-import os # NEW
-from pathlib import Path # NEW
+import os
+from pathlib import Path
 
-# NEW
 os.chdir(Path(__file__).parent)
 
 class Patient:
@@ -23,12 +22,12 @@ class Patient:
         self.q_time_treat = pd.NA
         self.q_time_pharmacy = pd.NA
         
-        self.arrival_time = pd.NA # NEW
+        self.arrival_time = pd.NA
 
 class Param:
     def __init__(
         self,
-        patient_iat_csv, # NEW
+        patient_iat_csv,
         mean_reg_time = 4,
         sd_reg_time = 1.2,
         mean_triage_time = 10,
@@ -78,7 +77,6 @@ class Param:
             cumulative_mean_tracker_interval
         )
 
-        # NEW
         self.pt_arrivals_time_dependent_df = (
             pd.read_csv(patient_iat_csv)
         )
@@ -107,8 +105,8 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(8) # NEW - increased to 8
-        # NEW
+        seeds = ss.spawn(8)
+
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
             random_seed1=seeds[0],
@@ -162,7 +160,6 @@ class Model:
             p = Patient(self.patient_counter)
             self.list_of_patients.append(p)
             self.env.process(self.attend_ed(p))
-            # NEW
             sampled_inter = self.patient_inter_dist.sample(
                 simulation_time=(self.env.now%1440)
             )
@@ -194,7 +191,7 @@ class Model:
             yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
 
     def attend_ed(self, patient):
-        patient.arrival_time = self.env.now # NEW
+        patient.arrival_time = self.env.now
 
         start_q_reg = self.env.now
 
@@ -302,7 +299,6 @@ class Model:
             entity_dataframe["q_time_pharmacy"].quantile(0.9)
         )
 
-        # NEW
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
 class Trial:
@@ -427,8 +423,8 @@ class Trial:
             )
 
             fig.show()
-            # NEW - renamed file to ed_model_2
-            fig.write_html(f"ed_model_2_cumul_mean_{col}.html")
+            # NEW - renamed file to ed_model_3
+            fig.write_html(f"ed_model_3_cumul_mean_{col}.html")
 
     def calculate_trial_results(self):
         if self.warm_up_trial:
@@ -524,7 +520,6 @@ class Trial:
             self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
         )
 
-    # NEW
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -573,7 +568,6 @@ class Trial:
         fig.show()
         fig.write_html("ed_arrival_time_frequencies.html")
 
-# NEW
 base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv",
     warm_up_period=20000
