@@ -595,45 +595,86 @@ base_case_trial.plot_arrival_time_frequencies()
 # NEW
 print ("BASE CASE TRIAL RESULTS")
 print ("-----------------------")
-print ("Queuing Time for the Nurse (ALL, P1, P2, P3)")
+print (
+    "Queuing Time for the Nurse (ALL,",
+    "\033[31m"
+    "P1,",
+    "\033[0m"
+    "\033[33m"
+    "P2,",
+    "\033[0m"
+    "\033[32m"
+    "P3)"
+    "\033[0m"
+)
 print (
     f"Mean : {base_case_trial.trial_mean_q_time_nurse:.2f},",
+    "\033[31m"
     f"{base_case_trial.trial_mean_q_time_nurse_pri_1:.2f},",
+    "\033[0m"
+    "\033[33m"
     f"{base_case_trial.trial_mean_q_time_nurse_pri_2:.2f},",
+    "\033[0m"
+    "\033[32m"
     f"{base_case_trial.trial_mean_q_time_nurse_pri_3:.2f}",
+    "\033[0m"
     "minutes"
 )
 print (
     f"SD : {base_case_trial.trial_sd_q_time_nurse:.2f},",
+    "\033[31m"
     f"{base_case_trial.trial_sd_q_time_nurse_pri_1:.2f},",
+    "\033[0m"
+    "\033[33m"
     f"{base_case_trial.trial_sd_q_time_nurse_pri_2:.2f},",
+     "\033[0m"
+    "\033[32m"
     f"{base_case_trial.trial_sd_q_time_nurse_pri_3:.2f}",
+    "\033[0m"
     "minutes"
 )
 print (
     f"90th Perc : {base_case_trial.trial_perc_90_q_time_nurse:.2f},",
+    "\033[31m"
     f"{base_case_trial.trial_perc_90_q_time_nurse_pri_1:.2f},",
+    "\033[0m"
+    "\033[33m"
     f"{base_case_trial.trial_perc_90_q_time_nurse_pri_2:.2f},",
+    "\033[0m"
+    "\033[32m"
     f"{base_case_trial.trial_perc_90_q_time_nurse_pri_3:.2f}",
+    "\033[0m"
     "minutes"
 )
 
 print (
     f"Standard Error : {base_case_trial.se_q_time_nurse:.2f},",
+    "\033[31m"
     f"{base_case_trial.se_q_time_nurse_pri_1:.2f},",
+    "\033[0m"
+    "\033[33m"
     f"{base_case_trial.se_q_time_nurse_pri_2:.2f},",
+    "\033[0m"
+    "\033[32m"
     f"{base_case_trial.se_q_time_nurse_pri_3:.2f}"
+    "\033[0m"
 )
 
 print (
     f"95% CI : ({base_case_trial.ci_lower_q_time_nurse:.2f},"
     f"{base_case_trial.ci_upper_q_time_nurse:.2f}),",
+    "\033[31m"
     f"({base_case_trial.ci_lower_q_time_nurse_pri_1:.2f},",
     f"{base_case_trial.ci_upper_q_time_nurse_pri_1:.2f})",
+    "\033[0m"
+    "\033[33m"
     f"({base_case_trial.ci_lower_q_time_nurse_pri_2:.2f},",
     f"{base_case_trial.ci_upper_q_time_nurse_pri_2:.2f})",
+    "\033[0m"
+    "\033[32m"
     f"({base_case_trial.ci_lower_q_time_nurse_pri_3:.2f},",
     f"{base_case_trial.ci_upper_q_time_nurse_pri_3:.2f})",
+    "\033[0m"
     "minutes"
 )
 
