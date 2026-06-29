@@ -14,7 +14,7 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id):
+    def __init__(self, p_id, priority): # NEW
         self.id = p_id
 
         self.q_time_reg = pd.NA
@@ -23,6 +23,8 @@ class Patient:
         self.q_time_pharmacy = pd.NA
         
         self.arrival_time = pd.NA
+
+        self.priority = priority # NEW
 
 class Param:
     def __init__(
@@ -105,6 +107,7 @@ class Model:
             self.env,
             capacity=self.param.num_receptionists
         )
+        
         # NEW
         self.nurse = simpy.PriorityResource(
             self.env,
@@ -121,7 +124,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(8)
+        seeds = ss.spawn(9) # NEW - added extra seed spawn
 
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -155,6 +158,10 @@ class Model:
         self.treat_pharm_branch_prob_rng = (
             np.random.default_rng(seeds[6])
         )
+        # NEW
+        self.patient_priority_rng = (
+            np.random.default_rng(seeds[8])
+        )
 
         self.list_of_patients = []
         self.mean_q_time_reg = pd.NA
@@ -173,7 +180,22 @@ class Model:
     def generator_patient_arrivals(self):
         while True:
             self.patient_counter += 1
-            p = Patient(self.patient_counter)
+
+            # NEW
+            pat_pri_ran_gen = self.patient_priority_rng.random()
+
+            if pat_pri_ran_gen < 0.05:
+                patient_priority = 1
+            elif pat_pri_ran_gen < 0.2:
+                patient_priority = 2
+            elif pat_pri_ran_gen < 0.6:
+                patient_priority = 3
+            elif pat_pri_ran_gen < 0.9:
+                patient_priority = 4
+            else:
+                patient_priority = 5
+
+            p = Patient(self.patient_counter, patient_priority) # NEW
             self.list_of_patients.append(p)
             self.env.process(self.attend_ed(p))
             sampled_inter = self.patient_inter_dist.sample(
@@ -325,9 +347,22 @@ class Model:
         else:
             start_q_treat = self.env.now
 
-            with self.doctor.request() as req:
+            # NEW
+            print (
+                f"Patient {patient.id} (Priority {patient.priority})",
+                "is waiting to see the doctor"
+            )
+
+            with self.doctor.request(priority=patient.priority) as req: # NEW
                 yield req
                 end_q_treat = self.env.now
+
+                # NEW
+                print (
+                    f"Patient {patient.id} (Priority {patient.priority})",
+                    "is being seen by the doctor"
+                )
+
                 if self.env.now > self.param.warm_up_period:
                     patient.q_time_treat = end_q_treat - start_q_treat
                 sampled_treat_act_time = self.treat_act_time_dist.sample()
