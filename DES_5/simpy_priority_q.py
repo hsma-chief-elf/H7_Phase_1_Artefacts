@@ -144,7 +144,7 @@ class Model:
                 )
             
             next_departure_time += (
-                self.param.nurse_unav_freq
+                self.param.nurse_unav_time + self.param.nurse_unav_freq
             )
 
     def remove_one_nurse(self, time_to_return):
