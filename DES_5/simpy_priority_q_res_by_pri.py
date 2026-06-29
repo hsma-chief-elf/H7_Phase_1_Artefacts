@@ -114,7 +114,7 @@ class Model:
 
             if self.patient_priority_rng.random() < 0.2:
                 patient_priority = 1
-            elif self.patient_priority_rng.random() < 0.5:
+            elif self.patient_priority_rng.random() < 0.7:
                 patient_priority = 2
             else:
                 patient_priority = 3
