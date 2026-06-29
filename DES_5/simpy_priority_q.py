@@ -103,9 +103,11 @@ class Model:
             self.patient_counter += 1
 
             # NEW
-            if self.patient_priority_rng.random() < 0.2:
+            pat_pri_ran_gen = self.patient_priority_rng.random()
+
+            if pat_pri_ran_gen < 0.2:
                 patient_priority = 1
-            elif self.patient_priority_rng.random() < 0.7:
+            elif pat_pri_ran_gen < 0.7:
                 patient_priority = 2
             else:
                 patient_priority = 3
