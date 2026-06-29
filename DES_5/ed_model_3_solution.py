@@ -176,6 +176,22 @@ class Model:
         self.mean_q_time_pharm = pd.NA
         self.sd_q_time_pharm = pd.NA
         self.perc_90_q_time_pharm = pd.NA
+        # NEW
+        self.mean_q_time_doctor_pri_1 = pd.NA
+        self.mean_q_time_doctor_pri_2 = pd.NA
+        self.mean_q_time_doctor_pri_3 = pd.NA
+        self.mean_q_time_doctor_pri_4 = pd.NA
+        self.mean_q_time_doctor_pri_5 = pd.NA
+        self.sd_q_time_doctor_pri_1 = pd.NA
+        self.sd_q_time_doctor_pri_2 = pd.NA
+        self.sd_q_time_doctor_pri_3 = pd.NA
+        self.sd_q_time_doctor_pri_4 = pd.NA
+        self.sd_q_time_doctor_pri_5 = pd.NA
+        self.perc_90_q_time_doctor_pri_1 = pd.NA
+        self.perc_90_q_time_doctor_pri_2 = pd.NA
+        self.perc_90_q_time_doctor_pri_3 = pd.NA
+        self.perc_90_q_time_doctor_pri_4 = pd.NA
+        self.perc_90_q_time_doctor_pri_5 = pd.NA
 
     def generator_patient_arrivals(self):
         while True:
@@ -215,11 +231,6 @@ class Model:
             time_should_go = next_departure_time
             time_to_return = time_should_go + self.param.nurse_unav_time
 
-            print (
-                f"{self.param.num_nurses_unav} nurses should go at",
-                f"{time_should_go:.2f}"
-            )
-
             for removal_candidate in range(self.param.num_nurses_unav):
                 self.env.process(
                     self.remove_one_nurse(
@@ -243,11 +254,6 @@ class Model:
             time_should_go = next_departure_time
             time_to_return = time_should_go + self.param.doctor_unav_time
 
-            print (
-                f"{self.param.num_doctors_unav} doctors should go at",
-                f"{time_should_go:.2f}"
-            )
-
             for removal_candidate in range(self.param.num_doctors_unav):
                 self.env.process(
                     self.remove_one_doctor(
@@ -263,23 +269,19 @@ class Model:
         req = self.nurse.request(priority=-1)
         yield req
         time_went = self.env.now
-        print (f"A nurse went at {time_went:.2f}")
 
         time_away = time_to_return - time_went
         yield self.env.timeout(time_away)
         self.nurse.release(req)
-        print (f"A nurse returned at {self.env.now:.2f}")
 
     def remove_one_doctor(self, time_to_return):
         req = self.doctor.request(priority=-1)
         yield req
         time_went = self.env.now
-        print (f"A doctor went at {time_went:.2f}")
 
         time_away = time_to_return - time_went
         yield self.env.timeout(time_away)
         self.doctor.release(req)
-        print (f"A doctor returned at {self.env.now:.2f}")
 
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
@@ -347,21 +349,9 @@ class Model:
         else:
             start_q_treat = self.env.now
 
-            # NEW
-            print (
-                f"Patient {patient.id} (Priority {patient.priority})",
-                "is waiting to see the doctor"
-            )
-
             with self.doctor.request(priority=patient.priority) as req: # NEW
                 yield req
                 end_q_treat = self.env.now
-
-                # NEW
-                print (
-                    f"Patient {patient.id} (Priority {patient.priority})",
-                    "is being seen by the doctor"
-                )
 
                 if self.env.now > self.param.warm_up_period:
                     patient.q_time_treat = end_q_treat - start_q_treat
@@ -434,6 +424,98 @@ class Model:
 
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
+        # NEW
+        self.mean_q_time_doctor_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_treat"
+            ].mean()
+        )
+        self.mean_q_time_doctor_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_treat"
+            ].mean()
+        )
+        self.mean_q_time_doctor_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_treat"
+            ].mean()
+        )
+        self.mean_q_time_doctor_pri_4 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 4,
+                "q_time_treat"
+            ].mean()
+        )
+        self.mean_q_time_doctor_pri_5 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 5,
+                "q_time_treat"
+            ].mean()
+        )
+        self.sd_q_time_doctor_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_treat"
+            ].std()
+        )
+        self.sd_q_time_doctor_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_treat"
+            ].std()
+        )
+        self.sd_q_time_doctor_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_treat"
+            ].std()
+        )
+        self.sd_q_time_doctor_pri_4 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 4,
+                "q_time_treat"
+            ].std()
+        )
+        self.sd_q_time_doctor_pri_5 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 5,
+                "q_time_treat"
+            ].std()
+        )
+        self.perc_90_q_time_doctor_pri_1 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 1,
+                "q_time_treat"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_doctor_pri_2 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 2,
+                "q_time_treat"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_doctor_pri_3 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 3,
+                "q_time_treat"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_doctor_pri_4 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 4,
+                "q_time_treat"
+            ].quantile(0.9)
+        )
+        self.perc_90_q_time_doctor_pri_5 = (
+            entity_dataframe.loc[
+                entity_dataframe["priority"] == 5,
+                "q_time_treat"
+            ].quantile(0.9)
+        )
+
 class Trial:
     def __init__(self, param, name_of_trial="Trial"):
         self.param = param
@@ -465,6 +547,38 @@ class Trial:
         self.ci_upper_q_time_pharm = pd.NA
         self.se_q_time_pharm = pd.NA
         self.warm_up_trial = False
+
+        # NEW
+        self.trial_mean_q_time_doctor_pri_1 = pd.NA
+        self.trial_mean_q_time_doctor_pri_2 = pd.NA
+        self.trial_mean_q_time_doctor_pri_3 = pd.NA
+        self.trial_mean_q_time_doctor_pri_4 = pd.NA
+        self.trial_mean_q_time_doctor_pri_5 = pd.NA
+        self.trial_sd_q_time_doctor_pri_1 = pd.NA
+        self.trial_sd_q_time_doctor_pri_2 = pd.NA
+        self.trial_sd_q_time_doctor_pri_3 = pd.NA
+        self.trial_sd_q_time_doctor_pri_4 = pd.NA
+        self.trial_sd_q_time_doctor_pri_5 = pd.NA
+        self.trial_perc_90_q_time_doctor_pri_1 = pd.NA
+        self.trial_perc_90_q_time_doctor_pri_2 = pd.NA
+        self.trial_perc_90_q_time_doctor_pri_3 = pd.NA
+        self.trial_perc_90_q_time_doctor_pri_4 = pd.NA
+        self.trial_perc_90_q_time_doctor_pri_5 = pd.NA
+        self.se_q_time_doctor_pri_1 = pd.NA
+        self.se_q_time_doctor_pri_2 = pd.NA
+        self.se_q_time_doctor_pri_3 = pd.NA
+        self.se_q_time_doctor_pri_4 = pd.NA
+        self.se_q_time_doctor_pri_5 = pd.NA
+        self.ci_lower_q_time_doctor_pri_1 = pd.NA
+        self.ci_lower_q_time_doctor_pri_2 = pd.NA
+        self.ci_lower_q_time_doctor_pri_3 = pd.NA
+        self.ci_lower_q_time_doctor_pri_4 = pd.NA
+        self.ci_lower_q_time_doctor_pri_5 = pd.NA
+        self.ci_upper_q_time_doctor_pri_1 = pd.NA
+        self.ci_upper_q_time_doctor_pri_2 = pd.NA
+        self.ci_upper_q_time_doctor_pri_3 = pd.NA
+        self.ci_upper_q_time_doctor_pri_4 = pd.NA
+        self.ci_upper_q_time_doctor_pri_5 = pd.NA
 
     def run_trial(self):
         for replication_id in tqdm(
@@ -653,6 +767,118 @@ class Trial:
             self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
         )
 
+        # NEW
+        self.trial_mean_q_time_doctor_pri_1 = (
+            self.replication_df["mean_q_time_doctor_pri_1"].mean()
+        )
+        self.trial_mean_q_time_doctor_pri_2 = (
+            self.replication_df["mean_q_time_doctor_pri_2"].mean()
+        )
+        self.trial_mean_q_time_doctor_pri_3 = (
+            self.replication_df["mean_q_time_doctor_pri_3"].mean()
+        )
+        self.trial_mean_q_time_doctor_pri_4 = (
+            self.replication_df["mean_q_time_doctor_pri_4"].mean()
+        )
+        self.trial_mean_q_time_doctor_pri_5 = (
+            self.replication_df["mean_q_time_doctor_pri_5"].mean()
+        )
+        self.trial_sd_q_time_doctor_pri_1 = (
+            self.replication_df["mean_q_time_doctor_pri_1"].std()
+        )
+        self.trial_sd_q_time_doctor_pri_2 = (
+            self.replication_df["mean_q_time_doctor_pri_2"].std()
+        )
+        self.trial_sd_q_time_doctor_pri_3 = (
+            self.replication_df["mean_q_time_doctor_pri_3"].std()
+        )
+        self.trial_sd_q_time_doctor_pri_4 = (
+            self.replication_df["mean_q_time_doctor_pri_4"].std()
+        )
+        self.trial_sd_q_time_doctor_pri_5 = (
+            self.replication_df["mean_q_time_doctor_pri_5"].std()
+        )
+        self.trial_perc_90_q_time_doctor_pri_1 = (
+            self.replication_df["mean_q_time_doctor_pri_1"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_doctor_pri_2 = (
+            self.replication_df["mean_q_time_doctor_pri_2"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_doctor_pri_3 = (
+            self.replication_df["mean_q_time_doctor_pri_3"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_doctor_pri_4 = (
+            self.replication_df["mean_q_time_doctor_pri_4"].quantile(0.9)
+        )
+        self.trial_perc_90_q_time_doctor_pri_5 = (
+            self.replication_df["mean_q_time_doctor_pri_5"].quantile(0.9)
+        )
+        self.se_q_time_doctor_pri_1 = (
+            self.trial_sd_q_time_doctor_pri_1 / math.sqrt(total_reps)
+        )
+        self.se_q_time_doctor_pri_2 = (
+            self.trial_sd_q_time_doctor_pri_2 / math.sqrt(total_reps)
+        )
+        self.se_q_time_doctor_pri_3 = (
+            self.trial_sd_q_time_doctor_pri_3 / math.sqrt(total_reps)
+        )
+        self.se_q_time_doctor_pri_4 = (
+            self.trial_sd_q_time_doctor_pri_4 / math.sqrt(total_reps)
+        )
+        self.se_q_time_doctor_pri_5 = (
+            self.trial_sd_q_time_doctor_pri_5 / math.sqrt(total_reps)
+        )
+        self.ci_lower_q_time_doctor_pri_1 = (
+            self.trial_mean_q_time_doctor_pri_1 - (
+                t * self.se_q_time_doctor_pri_1
+            )
+        )
+        self.ci_lower_q_time_doctor_pri_2 = (
+            self.trial_mean_q_time_doctor_pri_2 - (
+                t * self.se_q_time_doctor_pri_2
+            )
+        )
+        self.ci_lower_q_time_doctor_pri_3 = (
+            self.trial_mean_q_time_doctor_pri_3 - (
+                t * self.se_q_time_doctor_pri_3
+            )
+        )
+        self.ci_lower_q_time_doctor_pri_4 = (
+            self.trial_mean_q_time_doctor_pri_4 - (
+                t * self.se_q_time_doctor_pri_4
+            )
+        )
+        self.ci_lower_q_time_doctor_pri_5 = (
+            self.trial_mean_q_time_doctor_pri_5 - (
+                t * self.se_q_time_doctor_pri_5
+            )
+        )
+        self.ci_upper_q_time_doctor_pri_1 = (
+            self.trial_mean_q_time_doctor_pri_1 + (
+                t * self.se_q_time_doctor_pri_1
+            )
+        )
+        self.ci_upper_q_time_doctor_pri_2 = (
+            self.trial_mean_q_time_doctor_pri_2 + (
+                t * self.se_q_time_doctor_pri_2
+            )
+        )
+        self.ci_upper_q_time_doctor_pri_3 = (
+            self.trial_mean_q_time_doctor_pri_3 + (
+                t * self.se_q_time_doctor_pri_3
+            )
+        )
+        self.ci_upper_q_time_doctor_pri_4 = (
+            self.trial_mean_q_time_doctor_pri_4 + (
+                t * self.se_q_time_doctor_pri_4
+            )
+        )
+        self.ci_upper_q_time_doctor_pri_5 = (
+            self.trial_mean_q_time_doctor_pri_5 + (
+                t * self.se_q_time_doctor_pri_5
+            )
+        )
+
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -703,8 +929,7 @@ class Trial:
 
 base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv",
-    warm_up_period=20000,
-    num_replications=1 # NEW
+    warm_up_period=20000
 )
 
 #warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
@@ -771,6 +996,129 @@ for trial in list_of_trials:
         f"95% CI: ({trial.ci_lower_q_time_treat:.2f},",
         f"{trial.ci_upper_q_time_treat:.2f})"
     )
+    print ()
+
+    # NEW
+    print ("Treatment (by Priority)")
+    print (
+        "("
+        "\033[31m"
+        "P1,",
+        "\033[0m"
+        "\033[35m"
+        "P2,",
+        "\033[0m"
+        "\033[33m"
+        "P3,",
+        "\033[0m"
+        "\033[36m"
+        "P4,",
+        "\033[0m"
+        "\033[32m"
+        "P5)"
+        "\033[0m"
+    )
+    print (
+        "Mean : "
+        "\033[31m"
+        f"{base_case_trial.trial_mean_q_time_doctor_pri_1:.2f},",
+        "\033[0m"
+        "\033[35m"
+        f"{base_case_trial.trial_mean_q_time_doctor_pri_2:.2f},",
+        "\033[0m"
+        "\033[33m"
+        f"{base_case_trial.trial_mean_q_time_doctor_pri_3:.2f},",
+        "\033[0m"
+        "\033[36m"
+        f"{base_case_trial.trial_mean_q_time_doctor_pri_4:.2f},",
+        "\033[0m"
+        "\033[32m"
+        f"{base_case_trial.trial_mean_q_time_doctor_pri_5:.2f}",
+        "\033[0m"
+        "minutes"
+    )
+    print (
+        "SD : "
+        "\033[31m"
+        f"{base_case_trial.trial_sd_q_time_doctor_pri_1:.2f},",
+        "\033[0m"
+        "\033[35m"
+        f"{base_case_trial.trial_sd_q_time_doctor_pri_2:.2f},",
+        "\033[0m"
+        "\033[33m"
+        f"{base_case_trial.trial_sd_q_time_doctor_pri_3:.2f},",
+        "\033[0m"
+        "\033[36m"
+        f"{base_case_trial.trial_sd_q_time_doctor_pri_4:.2f},",
+        "\033[0m"
+        "\033[32m"
+        f"{base_case_trial.trial_sd_q_time_doctor_pri_5:.2f}",
+        "\033[0m"
+        "minutes"
+    )
+    print (
+        "90th Perc : "
+        "\033[31m"
+        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_1:.2f},",
+        "\033[0m"
+        "\033[35m"
+        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_2:.2f},",
+        "\033[0m"
+        "\033[33m"
+        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_3:.2f},",
+        "\033[0m"
+        "\033[36m"
+        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_4:.2f},",
+        "\033[0m"
+        "\033[32m"
+        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_5:.2f}",
+        "\033[0m"
+        "minutes"
+    )
+    print (
+        "SE : "
+        "\033[31m"
+        f"{base_case_trial.se_q_time_doctor_pri_1:.2f},",
+        "\033[0m"
+        "\033[35m"
+        f"{base_case_trial.se_q_time_doctor_pri_2:.2f},",
+        "\033[0m"
+        "\033[33m"
+        f"{base_case_trial.se_q_time_doctor_pri_3:.2f},",
+        "\033[0m"
+        "\033[36m"
+        f"{base_case_trial.se_q_time_doctor_pri_4:.2f},",
+        "\033[0m"
+        "\033[32m"
+        f"{base_case_trial.se_q_time_doctor_pri_5:.2f}",
+        "\033[0m"
+        "minutes"
+    )
+    print (
+        "95% CI : "
+        "\033[31m"
+        f"({base_case_trial.ci_lower_q_time_doctor_pri_1:.2f},",
+        f"{base_case_trial.ci_upper_q_time_doctor_pri_1:.2f}),"
+        "\033[0m"
+        "\033[35m"
+        f"({base_case_trial.ci_lower_q_time_doctor_pri_2:.2f},",
+        f"{base_case_trial.ci_upper_q_time_doctor_pri_2:.2f}),"
+        "\033[0m"
+        "\033[33m"
+        f"({base_case_trial.ci_lower_q_time_doctor_pri_3:.2f},",
+        f"{base_case_trial.ci_upper_q_time_doctor_pri_3:.2f}),"
+        "\033[0m"
+        "\033[36m"
+        f"({base_case_trial.ci_lower_q_time_doctor_pri_4:.2f},",
+        f"{base_case_trial.ci_upper_q_time_doctor_pri_4:.2f}),"
+        "\033[0m"
+        "\033[32m"
+        f"({base_case_trial.ci_lower_q_time_doctor_pri_5:.2f},",
+        f"{base_case_trial.ci_upper_q_time_doctor_pri_5:.2f}),"
+        "\033[0m"
+        "minutes"
+    )
+
     print ()
 
     print ("Pharmacy")
