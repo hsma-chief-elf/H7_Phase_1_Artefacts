@@ -42,8 +42,6 @@ class Param:
         num_nurses = 2,
         num_doctors = 5,
         num_pharmacists = 1,
-        branch_prob_triage_to_pharm = 0.5,
-        branch_prob_treat_to_pharm = 0.4,
         results_collection_period = 2880,
         warm_up_period = 10000,
         num_replications = 40,
@@ -69,8 +67,22 @@ class Param:
         self.num_nurses = num_nurses
         self.num_doctors = num_doctors
         self.num_pharmacists = num_pharmacists
-        self.branch_prob_triage_to_pharm = branch_prob_triage_to_pharm
-        self.branch_prob_treat_to_pharm = branch_prob_treat_to_pharm
+        # NEW
+        self.branch_prob_triage_to_pharm_dict = {
+            1:0.01,
+            2:0.03,
+            3:0.2,
+            4:0.6,
+            5:0.85
+        }
+        # NEW
+        self.branch_prob_treat_to_pharm_dict = {
+            1:0.9,
+            2:0.7,
+            3:0.6,
+            4:0.3,
+            5:0.25
+        }
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
@@ -206,7 +218,7 @@ class Model:
                 patient_priority = 2
             elif pat_pri_ran_gen < 0.6:
                 patient_priority = 3
-            elif pat_pri_ran_gen < 0.9:
+            elif pat_pri_ran_gen < 0.7:
                 patient_priority = 4
             else:
                 patient_priority = 5
@@ -333,7 +345,7 @@ class Model:
 
         if (
             self.triage_pharm_branch_prob_rng.random() <
-            self.param.branch_prob_triage_to_pharm
+            self.param.branch_prob_triage_to_pharm_dict[patient.priority] # NEW
         ):
             start_q_pharm = self.env.now
 
@@ -360,7 +372,7 @@ class Model:
 
             if (
                 self.treat_pharm_branch_prob_rng.random() <
-                self.param.branch_prob_treat_to_pharm
+                self.param.branch_prob_treat_to_pharm_dict[patient.priority]#NEW
             ):
                 start_q_pharm = self.env.now
 
