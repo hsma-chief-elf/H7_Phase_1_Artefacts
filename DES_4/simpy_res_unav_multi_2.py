@@ -133,7 +133,7 @@ class Model:
                 )
             
             next_departure_time += (
-                self.param.nurse_unav_freq
+                self.param.nurse_unav_time + self.param.nurse_unav_freq
             )
 
     # NEW
