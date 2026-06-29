@@ -47,7 +47,13 @@ class Param:
         num_replications = 40,
         num_replications_warm_up_assessment = 20,
         warm_up_assessment_sim_length_scaler = 10,
-        cumulative_mean_tracker_interval = 100
+        cumulative_mean_tracker_interval = 100,
+        nurse_unav_time = 480, # NEW
+        nurse_unav_freq = 960, # NEW
+        num_nurses_unav = 1, # NEW
+        doctor_unav_time = 120, # NEW
+        doctor_unav_freq = 240, # NEW
+        num_doctors_unav = 3 # NEW
     ):
         self.mean_reg_time = mean_reg_time
         self.sd_reg_time = sd_reg_time
@@ -81,6 +87,14 @@ class Param:
             pd.read_csv(patient_iat_csv)
         )
 
+        # NEW
+        self.nurse_unav_time = nurse_unav_time
+        self.nurse_unav_freq = nurse_unav_freq
+        self.num_nurses_unav = num_nurses_unav
+        self.doctor_unav_time = doctor_unav_time
+        self.doctor_unav_freq = doctor_unav_freq
+        self.num_doctors_unav = num_doctors_unav
+
 class Model:
     def __init__(self, param, replication_id):
         self.param = param
@@ -91,11 +105,13 @@ class Model:
             self.env,
             capacity=self.param.num_receptionists
         )
-        self.nurse = simpy.Resource(
+        # NEW
+        self.nurse = simpy.PriorityResource(
             self.env,
             capacity=self.param.num_nurses
         )
-        self.doctor = simpy.Resource(
+        # NEW
+        self.doctor = simpy.PriorityResource(
             self.env,
             capacity=self.param.num_doctors
         )
@@ -164,6 +180,84 @@ class Model:
                 simulation_time=(self.env.now%1440)
             )
             yield self.env.timeout(sampled_inter)
+
+    # NEW
+    def obstruct_nurse(self):
+        next_departure_time = self.param.nurse_unav_freq
+
+        while True:
+            yield self.env.timeout(
+                next_departure_time - self.env.now
+            )
+
+            time_should_go = next_departure_time
+            time_to_return = time_should_go + self.param.nurse_unav_time
+
+            print (
+                f"{self.param.num_nurses_unav} nurses should go at",
+                f"{time_should_go:.2f}"
+            )
+
+            for removal_candidate in range(self.param.num_nurses_unav):
+                self.env.process(
+                    self.remove_one_nurse(
+                        time_to_return
+                    )
+                )
+
+            next_departure_time += (
+                self.param.nurse_unav_time + self.param.nurse_unav_freq
+            )
+
+    # NEW
+    def obstruct_doctor(self):
+        next_departure_time = self.param.doctor_unav_freq
+
+        while True:
+            yield self.env.timeout(
+                next_departure_time - self.env.now
+            )
+
+            time_should_go = next_departure_time
+            time_to_return = time_should_go + self.param.doctor_unav_time
+
+            print (
+                f"{self.param.num_doctors_unav} doctors should go at",
+                f"{time_should_go:.2f}"
+            )
+
+            for removal_candidate in range(self.param.num_doctors_unav):
+                self.env.process(
+                    self.remove_one_doctor(
+                        time_to_return
+                    )
+                )
+
+            next_departure_time += (
+                self.param.doctor_unav_time + self.param.doctor_unav_freq
+            )
+
+    def remove_one_nurse(self, time_to_return):
+        req = self.nurse.request(priority=-1)
+        yield req
+        time_went = self.env.now
+        print (f"A nurse went at {time_went:.2f}")
+
+        time_away = time_to_return - time_went
+        yield self.env.timeout(time_away)
+        self.nurse.release(req)
+        print (f"A nurse returned at {self.env.now:.2f}")
+
+    def remove_one_doctor(self, time_to_return):
+        req = self.doctor.request(priority=-1)
+        yield req
+        time_went = self.env.now
+        print (f"A doctor went at {time_went:.2f}")
+
+        time_away = time_to_return - time_went
+        yield self.env.timeout(time_away)
+        self.doctor.release(req)
+        print (f"A doctor returned at {self.env.now:.2f}")
 
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
@@ -257,6 +351,8 @@ class Model:
             
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
+        self.env.process(self.obstruct_nurse()) # NEW
+        self.env.process(self.obstruct_doctor()) # NEW
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
@@ -267,6 +363,8 @@ class Model:
         )
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
+        self.env.process(self.obstruct_nurse()) # NEW
+        self.env.process(self.obstruct_doctor()) # NEW
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
 
     def convert_entity_list_to_dataframe(self, entity_list):
@@ -570,12 +668,13 @@ class Trial:
 
 base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv",
-    warm_up_period=20000
+    warm_up_period=20000,
+    num_replications=1 # NEW
 )
 
-warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
-warm_up_assessment_trial.run_warm_up_assessment_trial()
-warm_up_assessment_trial.calculate_trial_results()
+#warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
+#warm_up_assessment_trial.run_warm_up_assessment_trial()
+#warm_up_assessment_trial.calculate_trial_results()
 
 list_of_trials = []
 
@@ -585,6 +684,7 @@ base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
 list_of_trials.append(base_case_trial)
 
+"""
 wi_1_params = Param(
     warm_up_period=20000,
     num_receptionists=2,
@@ -601,7 +701,7 @@ wi_1_trial = Trial(
 wi_1_trial.run_trial()
 wi_1_trial.calculate_trial_results()
 list_of_trials.append(wi_1_trial)
-
+"""
 for trial in list_of_trials:
     print (trial.name_of_trial)
     print ("-----------------")
