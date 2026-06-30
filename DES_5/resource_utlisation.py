@@ -97,7 +97,6 @@ class Model:
         self.sd_q_time_nurse = pd.NA
         self.perc_90_q_time_nurse = pd.NA
 
-        # NEW
         self.mean_q_time_nurse_pri_1 = pd.NA
         self.mean_q_time_nurse_pri_2 = pd.NA
         self.mean_q_time_nurse_pri_3 = pd.NA
@@ -251,7 +250,6 @@ class Model:
 
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
-        # NEW
         self.mean_q_time_nurse_pri_1 = (
             entity_dataframe.loc[
                 entity_dataframe["priority"] == 1,
@@ -318,7 +316,7 @@ class Trial:
         self.ci_upper_q_time_nurse = pd.NA
         self.se_q_time_nurse = pd.NA
         self.warm_up_trial = False
-        # NEW
+
         self.trial_mean_q_time_nurse_pri_1 = pd.NA
         self.trial_mean_q_time_nurse_pri_2 = pd.NA
         self.trial_mean_q_time_nurse_pri_3 = pd.NA
@@ -461,7 +459,6 @@ class Trial:
             self.trial_mean_q_time_nurse + (t * self.se_q_time_nurse)
         )
 
-        # NEW
         self.trial_mean_q_time_nurse_pri_1 = (
             self.replication_df["mean_q_time_nurse_pri_1"].mean()
         )
@@ -580,9 +577,6 @@ class Trial:
 base_case_params = Param(
     patient_iat_csv="nspp_example_dataset.csv",
     warm_up_period=0,
-    #num_replications=1, # NEW - removed number of replications override
-    #num_nurses=1, # NEW - removed number of nurses override
-    #num_nurses_unav=0 # NEW - removed nurse unavailability override
 )
 
 #warm_up_assessment_trial = Trial(base_case_params)
@@ -594,7 +588,6 @@ base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
 
-# NEW
 print ("BASE CASE TRIAL RESULTS")
 print ("-----------------------")
 print (
