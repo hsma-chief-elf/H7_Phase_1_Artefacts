@@ -335,10 +335,11 @@ class Model:
         # NEW
         self.nurse_utilisation_prop = (
             self.nurse_utilisation_total / (
-                self.param.results_collection_period - 
-                self.nurse_theoretical_unav_total
+                (
+                    self.param.results_collection_period * self.param.num_nurses
+                ) - self.nurse_theoretical_unav_total
             )
-        ) / self.param.num_nurses
+        )
 
 class Trial:
     def __init__(self, param):
