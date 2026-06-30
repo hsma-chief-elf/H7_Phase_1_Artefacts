@@ -162,15 +162,16 @@ class Model:
             )
 
             # NEW
-            for removal_candidate in range(self.param.num_nurses_unav):
-                if (time_to_return < self.param.sim_duration):
-                    self.nurse_theoretical_unav_total += (
-                        time_to_return - self.env.now
-                    )
-                else:
-                    self.nurse_theoretical_unav_total += (
-                        self.param.sim_duration - self.env.now
-                    )
+            if self.env.now > self.param.warm_up_period:
+                for removal_candidate in range(self.param.num_nurses_unav):
+                    if (time_to_return < self.param.sim_duration):
+                        self.nurse_theoretical_unav_total += (
+                            time_to_return - self.env.now
+                        )
+                    else:
+                        self.nurse_theoretical_unav_total += (
+                            self.param.sim_duration - self.env.now
+                        )
 
     def remove_one_nurse(self, time_to_return):
         req = self.nurse.request(priority=-1)
@@ -233,14 +234,15 @@ class Model:
             yield self.env.timeout(sampled_nurse_act_time)
 
         # NEW
-        if (
-            (end_q_nurse + sampled_nurse_act_time) < self.param.sim_duration
-        ):
-            self.nurse_utilisation_total += sampled_nurse_act_time
-        else:
-            self.nurse_utilisation_total += (
-                self.param.sim_duration - self.env.now
-            )
+        if self.env.now > self.param.warm_up_period:
+            if (
+                (end_q_nurse + sampled_nurse_act_time) < self.param.sim_duration
+            ):
+                self.nurse_utilisation_total += sampled_nurse_act_time
+            else:
+                self.nurse_utilisation_total += (
+                    self.param.sim_duration - self.env.now
+                )
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
@@ -333,7 +335,8 @@ class Model:
         # NEW
         self.nurse_utilisation_prop = (
             self.nurse_utilisation_total / (
-                self.param.sim_duration - self.nurse_theoretical_unav_total
+                self.param.results_collection_period - 
+                self.nurse_theoretical_unav_total
             )
         ) / self.param.num_nurses
 
