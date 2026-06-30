@@ -162,14 +162,15 @@ class Model:
             )
 
             # NEW
-            if (time_to_return < self.param.sim_duration):
-                self.nurse_theoretical_unav_total += (
-                    time_to_return - self.env.now
-                )
-            else:
-                self.nurse_theoretical_unav_total += (
-                    self.param.sim_duration - self.env.now
-                )
+            for removal_candidate in range(self.param.num_nurses_unav):
+                if (time_to_return < self.param.sim_duration):
+                    self.nurse_theoretical_unav_total += (
+                        time_to_return - self.env.now
+                    )
+                else:
+                    self.nurse_theoretical_unav_total += (
+                        self.param.sim_duration - self.env.now
+                    )
 
     def remove_one_nurse(self, time_to_return):
         req = self.nurse.request(priority=-1)
