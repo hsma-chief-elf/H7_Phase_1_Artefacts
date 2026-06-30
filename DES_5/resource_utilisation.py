@@ -234,7 +234,7 @@ class Model:
 
         # NEW
         if (
-            (self.env.now + sampled_nurse_act_time) < self.param.sim_duration
+            (end_q_nurse + sampled_nurse_act_time) < self.param.sim_duration
         ):
             self.nurse_utilisation_total += sampled_nurse_act_time
         else:
