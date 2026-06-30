@@ -107,6 +107,10 @@ class Model:
         self.perc_90_q_time_nurse_pri_2 = pd.NA
         self.perc_90_q_time_nurse_pri_3 = pd.NA
 
+        self.nurse_utilisation_total = 0 # NEW
+        self.nurse_utilisation_prop = pd.NA # NEW
+        self.nurse_theoretical_unav_total = 0 # NEW
+
     def generator_patient_arrivals(self):
         while True:
             self.patient_counter += 1
@@ -156,6 +160,16 @@ class Model:
             next_departure_time += (
                 self.param.nurse_unav_time + self.param.nurse_unav_freq
             )
+
+            # NEW
+            if (time_to_return < self.param.sim_duration):
+                self.nurse_theoretical_unav_total += (
+                    time_to_return - self.env.now
+                )
+            else:
+                self.nurse_theoretical_unav_total += (
+                    self.param.sim_duration - self.env.now
+                )
 
     def remove_one_nurse(self, time_to_return):
         req = self.nurse.request(priority=-1)
@@ -216,6 +230,16 @@ class Model:
                 patient.q_time_nurse = end_q_nurse - start_q_nurse
             sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
             yield self.env.timeout(sampled_nurse_act_time)
+
+        # NEW
+        if (
+            (self.env.now + sampled_nurse_act_time) < self.param.sim_duration
+        ):
+            self.nurse_utilisation_total += sampled_nurse_act_time
+        else:
+            self.nurse_utilisation_total += (
+                self.param.sim_duration - self.env.now
+            )
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
@@ -305,6 +329,13 @@ class Model:
             ].quantile(0.9)
         )
 
+        # NEW
+        self.nurse_utilisation_prop = (
+            self.nurse_utilisation_total / (
+                self.param.sim_duration - self.nurse_theoretical_unav_total
+            )
+        ) / self.param.num_nurses
+
 class Trial:
     def __init__(self, param):
         self.param = param
@@ -335,6 +366,7 @@ class Trial:
         self.ci_upper_q_time_nurse_pri_1 = pd.NA
         self.ci_upper_q_time_nurse_pri_2 = pd.NA
         self.ci_upper_q_time_nurse_pri_3 = pd.NA
+        self.trial_mean_nurse_util_prop = pd.NA # NEW
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -525,6 +557,10 @@ class Trial:
                 t * self.se_q_time_nurse_pri_3
             )
         )
+        # NEW
+        self.trial_mean_nurse_util_prop = (
+            self.replication_df["nurse_utilisation_prop"].mean()
+        )
 
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
@@ -674,3 +710,10 @@ print (
 )
 
 print ()
+
+# NEW
+print (
+    "Mean nurse utilisation : ",
+    f"{base_case_trial.trial_mean_nurse_util_prop*100:.2f}%"
+)
+
