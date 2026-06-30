@@ -231,18 +231,19 @@ class Model:
             if self.env.now > self.param.warm_up_period:
                 patient.q_time_nurse = end_q_nurse - start_q_nurse
             sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
-            yield self.env.timeout(sampled_nurse_act_time)
 
-        # NEW
-        if self.env.now > self.param.warm_up_period:
-            if (
-                (end_q_nurse + sampled_nurse_act_time) < self.param.sim_duration
-            ):
-                self.nurse_utilisation_total += sampled_nurse_act_time
-            else:
-                self.nurse_utilisation_total += (
-                    self.param.sim_duration - self.env.now
-                )
+            # NEW
+            if self.env.now > self.param.warm_up_period:
+                end_activity = self.env.now + sampled_nurse_act_time
+
+                if (end_activity < self.param.sim_duration):
+                    self.nurse_utilisation_total += sampled_nurse_act_time
+                else:
+                    self.nurse_utilisation_total += (
+                        self.param.sim_duration - self.env.now
+                    )
+
+            yield self.env.timeout(sampled_nurse_act_time)
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
