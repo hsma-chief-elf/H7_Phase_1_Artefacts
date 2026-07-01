@@ -588,6 +588,7 @@ class Model:
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
+        old_warm_up = self.param.warm_up_period
         self.param.warm_up_period = 0
         self.param.sim_duration_warm_up_assessment = (
             self.param.results_collection_period *
@@ -598,6 +599,7 @@ class Model:
         self.env.process(self.obstruct_nurse()) # NEW
         self.env.process(self.obstruct_doctor()) # NEW
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
+        self.param.warm_up_period = old_warm_up
 
     def convert_entity_list_to_dataframe(self, entity_list):
         entity_dataframe = pd.DataFrame(
@@ -1197,9 +1199,9 @@ base_case_params = Param(
     warm_up_period=20000
 )
 
-#warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
-#warm_up_assessment_trial.run_warm_up_assessment_trial()
-#warm_up_assessment_trial.calculate_trial_results()
+warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
+warm_up_assessment_trial.run_warm_up_assessment_trial()
+warm_up_assessment_trial.calculate_trial_results()
 
 list_of_trials = []
 
