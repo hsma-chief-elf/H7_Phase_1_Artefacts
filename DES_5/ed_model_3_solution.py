@@ -34,10 +34,10 @@ class Param:
         sd_reg_time = 1.2,
         mean_pharm_time = 6,
         sd_pharm_time = 2,
-        num_receptionists = 1,
-        num_nurses = 2,
-        num_doctors = 5,
-        num_pharmacists = 1,
+        num_receptionists = 2, # NEW
+        num_nurses = 6, # NEW
+        num_doctors = 10, # NEW
+        num_pharmacists = 2, # NEW
         results_collection_period = 2880,
         warm_up_period = 10000,
         num_replications = 40,
@@ -1196,8 +1196,7 @@ class Trial:
         fig.write_html("ed_arrival_time_frequencies.html")
 
 base_case_params = Param(
-    patient_iat_csv="ed_iat_table.csv",
-    warm_up_period=20000
+    patient_iat_csv="ed_iat_table.csv" # NEW - removed warm up override
 )
 
 warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
