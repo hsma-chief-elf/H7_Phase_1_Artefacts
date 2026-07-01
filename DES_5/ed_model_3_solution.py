@@ -1211,6 +1211,7 @@ base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
 list_of_trials.append(base_case_trial)
 
+# NEW
 wi_1_params = Param(
     num_receptionists=1,
     num_nurses=5,
@@ -1225,6 +1226,19 @@ wi_1_trial = Trial(
 wi_1_trial.run_trial()
 wi_1_trial.calculate_trial_results()
 list_of_trials.append(wi_1_trial)
+
+wi_2_params = Param(
+    num_doctors=18,
+    patient_iat_csv="ed_iat_table.csv"
+)
+
+wi_2_trial = Trial(
+    wi_2_params,
+    "What If Scenario 2 : 18 Doctors"
+)
+wi_2_trial.run_trial()
+wi_2_trial.calculate_trial_results()
+list_of_trials.append(wi_2_trial)
 
 for trial in list_of_trials:
     print (trial.name_of_trial)
