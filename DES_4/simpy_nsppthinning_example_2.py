@@ -143,6 +143,7 @@ class Model:
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
+        old_warm_up = self.param.warm_up_period
         self.param.warm_up_period = 0
         self.param.sim_duration_warm_up_assessment = (
             self.param.results_collection_period *
@@ -151,6 +152,7 @@ class Model:
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
+        self.param.warm_up_period = old_warm_up
 
     def convert_entity_list_to_dataframe(self, entity_list):
         entity_dateframe = pd.DataFrame(
