@@ -278,6 +278,19 @@ class Model:
         self.perc_90_q_time_doctor_pri_3 = pd.NA
         self.perc_90_q_time_doctor_pri_4 = pd.NA
         self.perc_90_q_time_doctor_pri_5 = pd.NA
+        # NEW
+        self.receptionist_util_total = 0
+        self.receptionist_theo_unav_total = 0
+        self.receptionist_util_prop = pd.NA
+        self.nurse_util_total = 0
+        self.nurse_theo_unav_total = 0
+        self.nurse_util_prop = pd.NA
+        self.doctor_util_total = 0
+        self.doctor_theo_unav_total = 0
+        self.doctor_util_prop = pd.NA
+        self.pharmacist_util_total = 0
+        self.pharmacist_theo_unav_total = 0
+        self.pharmacist_util_prop = pd.NA
 
     def generator_patient_arrivals(self):
         while True:
@@ -328,6 +341,17 @@ class Model:
                 self.param.nurse_unav_time + self.param.nurse_unav_freq
             )
 
+            if self.env.now > self.param.warm_up_period:
+                for removal_candidate in range(self.param.num_nurses_unav):
+                    if (time_to_return < self.param.sim_duration):
+                        self.nurse_theo_unav_total += (
+                            time_to_return - self.env.now
+                        )
+                    else:
+                        self.nurse_theo_unav_total += (
+                            self.param.sim_duration - self.env.now
+                        )
+
     # NEW
     def obstruct_doctor(self):
         next_departure_time = self.param.doctor_unav_freq
@@ -350,6 +374,17 @@ class Model:
             next_departure_time += (
                 self.param.doctor_unav_time + self.param.doctor_unav_freq
             )
+
+            if self.env.now > self.param.warm_up_period:
+                for removal_candidate in range(self.param.num_doctors_unav):
+                    if (time_to_return < self.param.sim_duration):
+                        self.doctor_theo_unav_total += (
+                            time_to_return - self.env.now
+                        )
+                    else:
+                        self.doctor_theo_unav_total += (
+                            self.param.sim_duration - self.env.now
+                        )
 
     def remove_one_nurse(self, time_to_return):
         req = self.nurse.request(priority=-1)
@@ -409,6 +444,18 @@ class Model:
             if self.env.now > self.param.warm_up_period:
                 patient.q_time_reg = end_q_reg - start_q_reg
             sampled_reg_act_time = self.reg_act_time_dist.sample()
+            
+            # NEW
+            if self.env.now > self.param.warm_up_period:
+                end_activity = self.env.now + sampled_reg_act_time
+
+                if (end_activity < self.param.sim_duration):
+                    self.receptionist_util_total += sampled_reg_act_time
+                else:
+                    self.receptionist_util_total += (
+                        self.param.sim_duration - self.env.now
+                    )
+
             yield self.env.timeout(sampled_reg_act_time)
 
         start_q_triage = self.env.now
@@ -430,6 +477,18 @@ class Model:
             else:
                 chosen_triage_act_dist = self.triage_act_time_dist_p5
             sampled_triage_act_time = chosen_triage_act_dist.sample()
+
+            # NEW
+            if self.env.now > self.param.warm_up_period:
+                end_activity = self.env.now + sampled_triage_act_time
+
+                if (end_activity < self.param.sim_duration):
+                    self.nurse_util_total += sampled_triage_act_time
+                else:
+                    self.nurse_util_total += (
+                        self.param.sim_duration - self.env.now
+                    )
+
             yield self.env.timeout(sampled_triage_act_time)
 
         if (
@@ -444,6 +503,18 @@ class Model:
                 if self.env.now > self.param.warm_up_period:
                     patient.q_time_pharmacy = end_q_pharm - start_q_pharm
                 sampled_pharm_act_time = self.pharm_act_time_dist.sample()
+                
+                # NEW
+                if self.env.now > self.param.warm_up_period:
+                    end_activity = self.env.now + sampled_pharm_act_time
+
+                    if (end_activity < self.param.sim_duration):
+                        self.pharmacist_util_total += sampled_pharm_act_time
+                    else:
+                        self.pharmacist_util_total += (
+                            self.param.sim_duration - self.env.now
+                        )
+
                 yield self.env.timeout(sampled_pharm_act_time)
 
             # SINK AFTER PHARMACY
@@ -468,6 +539,18 @@ class Model:
                 else:
                     chosen_treat_act_dist = self.treat_act_time_dist_p5
                 sampled_treat_act_time = chosen_treat_act_dist.sample()
+
+                # NEW
+                if self.env.now > self.param.warm_up_period:
+                    end_activity = self.env.now + sampled_treat_act_time
+
+                    if (end_activity < self.param.sim_duration):
+                        self.doctor_util_total += sampled_treat_act_time
+                    else:
+                        self.doctor_util_total += (
+                            self.param.sim_duration - self.env.now
+                        )
+
                 yield self.env.timeout(sampled_treat_act_time)
 
             if (
@@ -482,6 +565,18 @@ class Model:
                     if self.env.now > self.param.warm_up_period:
                         patient.q_time_pharmacy = end_q_pharm - start_q_pharm
                     sampled_pharm_act_time = self.pharm_act_time_dist.sample()
+
+                    # NEW
+                    if self.env.now > self.param.warm_up_period:
+                        end_activity = self.env.now + sampled_pharm_act_time
+
+                        if (end_activity < self.param.sim_duration):
+                            self.pharmacist_util_total += sampled_pharm_act_time
+                        else:
+                            self.pharmacist_util_total += (
+                                self.param.sim_duration - self.env.now
+                            )
+
                     yield self.env.timeout(sampled_pharm_act_time)
 
                 # SINK AFTER PHARMACY
@@ -628,6 +723,46 @@ class Model:
             ].quantile(0.9)
         )
 
+        # NEW
+        self.receptionist_util_prop = (
+            self.receptionist_util_total / (
+                (
+                    self.param.results_collection_period * 
+                    self.param.num_receptionists
+                ) - self.receptionist_theo_unav_total
+            )
+        )
+
+        # NEW
+        self.nurse_util_prop = (
+            self.nurse_util_total / (
+                (
+                    self.param.results_collection_period *
+                    self.param.num_nurses
+                ) - self.nurse_theo_unav_total
+            )
+        )
+
+        # NEW
+        self.doctor_util_prop = (
+            self.doctor_util_total / (
+                (
+                    self.param.results_collection_period *
+                    self.param.num_doctors
+                ) - self.doctor_theo_unav_total
+            )
+        )
+
+        # NEW
+        self.pharmacist_util_prop = (
+            self.pharmacist_util_total / (
+                (
+                    self.param.results_collection_period *
+                    self.param.num_pharmacists
+                ) - self.pharmacist_theo_unav_total
+            )
+        )
+
 class Trial:
     def __init__(self, param, name_of_trial="Trial"):
         self.param = param
@@ -691,6 +826,10 @@ class Trial:
         self.ci_upper_q_time_doctor_pri_3 = pd.NA
         self.ci_upper_q_time_doctor_pri_4 = pd.NA
         self.ci_upper_q_time_doctor_pri_5 = pd.NA
+        self.trial_mean_receptionist_util_prop = pd.NA
+        self.trial_mean_nurse_util_prop = pd.NA
+        self.trial_mean_doctor_util_prop = pd.NA
+        self.trial_mean_pharmacist_util_prop = pd.NA
 
     def run_trial(self):
         for replication_id in tqdm(
@@ -991,6 +1130,20 @@ class Trial:
             )
         )
 
+        # NEW
+        self.trial_mean_receptionist_util_prop = (
+            self.replication_df["receptionist_util_prop"].mean()
+        )
+        self.trial_mean_nurse_util_prop = (
+            self.replication_df["nurse_util_prop"].mean()
+        )
+        self.trial_mean_doctor_util_prop = (
+            self.replication_df["doctor_util_prop"].mean()
+        )
+        self.trial_mean_pharmacist_util_prop = (
+            self.replication_df["pharmacist_util_prop"].mean()
+        )
+
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -1243,4 +1396,26 @@ for trial in list_of_trials:
         f"{trial.ci_upper_q_time_pharm:.2f})"
     )
     print ()
+
+    # NEW
+    print ("MEAN RESOURCE UTILISATION")
+    print (
+        "Receptionist : ",
+        f"{base_case_trial.trial_mean_receptionist_util_prop*100:.2f}%"
+    )
+
+    print (
+        "Nurse : ",
+        f"{base_case_trial.trial_mean_nurse_util_prop*100:.2f}%"
+    )
+
+    print (
+        "Doctor : ",
+        f"{base_case_trial.trial_mean_doctor_util_prop*100:.2f}%"
+    )
+
+    print (
+        "Pharmacist : ",
+        f"{base_case_trial.trial_mean_pharmacist_util_prop*100:.2f}%"
+    )
 
