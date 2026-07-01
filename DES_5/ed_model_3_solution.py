@@ -32,10 +32,6 @@ class Param:
         patient_iat_csv,
         mean_reg_time = 4,
         sd_reg_time = 1.2,
-        mean_triage_time = 10,
-        sd_triage_time = 2,
-        mean_treat_time = 45,
-        sd_treat_time = 20,
         mean_pharm_time = 6,
         sd_pharm_time = 2,
         num_receptionists = 1,
@@ -57,10 +53,38 @@ class Param:
     ):
         self.mean_reg_time = mean_reg_time
         self.sd_reg_time = sd_reg_time
-        self.mean_triage_time = mean_triage_time
-        self.sd_triage_time = sd_triage_time
-        self.mean_treat_time = mean_treat_time
-        self.sd_treat_time = sd_treat_time
+        # NEW
+        self.mean_triage_time_dict = {
+            1:20,
+            2:16,
+            3:10,
+            4:8,
+            5:7
+        }
+        # NEW
+        self.sd_triage_time_dict = {
+            1:7,
+            2:5,
+            3:2,
+            4:3,
+            5:1
+        }
+        # NEW
+        self.mean_treat_time_dict = {
+            1:240,
+            2:100,
+            3:45,
+            4:20,
+            5:15
+        }
+        # NEW
+        self.sd_treat_time_dict = {
+            1:90,
+            2:60,
+            3:20,
+            4:10,
+            5:5
+        }
         self.mean_pharm_time = mean_pharm_time
         self.sd_pharm_time = sd_pharm_time
         self.num_receptionists = num_receptionists
@@ -136,7 +160,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(9) # NEW - added extra seed spawn
+        seeds = ss.spawn(17) # NEW - added extra seed spawns
 
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -149,15 +173,65 @@ class Model:
             stdev=self.param.sd_reg_time,
             random_seed=seeds[1]
         )
-        self.triage_act_time_dist = Lognormal(
-            mean=self.param.mean_triage_time,
-            stdev=self.param.sd_triage_time,
+        # NEW
+        self.triage_act_time_dist_p1 = Lognormal(
+            mean=self.param.mean_triage_time_dict[1],
+            stdev=self.param.sd_triage_time_dict[1],
             random_seed=seeds[2]
         )
-        self.treat_act_time_dist = Lognormal(
-            mean=self.param.mean_treat_time,
-            stdev=self.param.sd_treat_time,
+        # NEW
+        self.triage_act_time_dist_p2 = Lognormal(
+            mean=self.param.mean_triage_time_dict[2],
+            stdev=self.param.sd_triage_time_dict[2],
+            random_seed=seeds[9]
+        )
+        # NEW
+        self.triage_act_time_dist_p3 = Lognormal(
+            mean=self.param.mean_triage_time_dict[3],
+            stdev=self.param.sd_triage_time_dict[3],
+            random_seed=seeds[10]
+        )
+        # NEW
+        self.triage_act_time_dist_p4 = Lognormal(
+            mean=self.param.mean_triage_time_dict[4],
+            stdev=self.param.sd_triage_time_dict[4],
+            random_seed=seeds[11]
+        )
+        # NEW
+        self.triage_act_time_dist_p5 = Lognormal(
+            mean=self.param.mean_triage_time_dict[5],
+            stdev=self.param.sd_triage_time_dict[5],
+            random_seed=seeds[12]
+        )
+        # NEW
+        self.treat_act_time_dist_p1 = Lognormal(
+            mean=self.param.mean_treat_time_dict[1],
+            stdev=self.param.sd_treat_time_dict[1],
             random_seed=seeds[3]
+        )
+        # NEW
+        self.treat_act_time_dist_p2 = Lognormal(
+            mean=self.param.mean_treat_time_dict[2],
+            stdev=self.param.sd_treat_time_dict[2],
+            random_seed=seeds[13]
+        )
+        # NEW
+        self.treat_act_time_dist_p3 = Lognormal(
+            mean=self.param.mean_treat_time_dict[3],
+            stdev=self.param.sd_treat_time_dict[3],
+            random_seed=seeds[14]
+        )
+        # NEW
+        self.treat_act_time_dist_p4 = Lognormal(
+            mean=self.param.mean_treat_time_dict[4],
+            stdev=self.param.sd_treat_time_dict[4],
+            random_seed=seeds[15]
+        )
+        # NEW
+        self.treat_act_time_dist_p5 = Lognormal(
+            mean=self.param.mean_treat_time_dict[5],
+            stdev=self.param.sd_treat_time_dict[5],
+            random_seed=seeds[16]
         )
         self.pharm_act_time_dist = Lognormal(
             mean=self.param.mean_pharm_time,
@@ -282,7 +356,9 @@ class Model:
         yield req
         time_went = self.env.now
 
-        time_away = time_to_return - time_went
+        time_away = max(
+            time_to_return - time_went, 0
+        )
         yield self.env.timeout(time_away)
         self.nurse.release(req)
 
@@ -291,7 +367,9 @@ class Model:
         yield req
         time_went = self.env.now
 
-        time_away = time_to_return - time_went
+        time_away = max(
+            time_to_return - time_went, 0
+        )
         yield self.env.timeout(time_away)
         self.doctor.release(req)
 
@@ -340,7 +418,18 @@ class Model:
             end_q_triage = self.env.now
             if self.env.now > self.param.warm_up_period:
                 patient.q_time_triage = end_q_triage - start_q_triage
-            sampled_triage_act_time = self.triage_act_time_dist.sample()
+            # NEW
+            if patient.priority == 1:
+                chosen_triage_act_dist = self.triage_act_time_dist_p1
+            elif patient.priority == 2:
+                chosen_triage_act_dist = self.triage_act_time_dist_p2
+            elif patient.priority == 3:
+                chosen_triage_act_dist = self.triage_act_time_dist_p3
+            elif patient.priority == 4:
+                chosen_triage_act_dist = self.triage_act_time_dist_p4
+            else:
+                chosen_triage_act_dist = self.triage_act_time_dist_p5
+            sampled_triage_act_time = chosen_triage_act_dist.sample()
             yield self.env.timeout(sampled_triage_act_time)
 
         if (
@@ -367,7 +456,18 @@ class Model:
 
                 if self.env.now > self.param.warm_up_period:
                     patient.q_time_treat = end_q_treat - start_q_treat
-                sampled_treat_act_time = self.treat_act_time_dist.sample()
+                # NEW
+                if patient.priority == 1:
+                    chosen_treat_act_dist = self.treat_act_time_dist_p1
+                elif patient.priority == 2:
+                    chosen_treat_act_dist = self.treat_act_time_dist_p2
+                elif patient.priority == 3:
+                    chosen_treat_act_dist = self.treat_act_time_dist_p3
+                elif patient.priority == 4:
+                    chosen_treat_act_dist = self.treat_act_time_dist_p4
+                else:
+                    chosen_treat_act_dist = self.treat_act_time_dist_p5
+                sampled_treat_act_time = chosen_treat_act_dist.sample()
                 yield self.env.timeout(sampled_treat_act_time)
 
             if (
