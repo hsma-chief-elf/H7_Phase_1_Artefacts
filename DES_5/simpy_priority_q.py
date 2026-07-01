@@ -292,7 +292,8 @@ class Trial:
             col for col in reference_df.columns if col not in [
                 x_col,
                 "id",
-                "arrival_time"
+                "arrival_time",
+                "priority" # NEW
             ]
         ]
 
