@@ -1285,100 +1285,100 @@ for trial in list_of_trials:
     print (
         "Mean : "
         "\033[31m"
-        f"{base_case_trial.trial_mean_q_time_doctor_pri_1:.2f},",
+        f"{trial.trial_mean_q_time_doctor_pri_1:.2f},",
         "\033[0m"
         "\033[35m"
-        f"{base_case_trial.trial_mean_q_time_doctor_pri_2:.2f},",
+        f"{trial.trial_mean_q_time_doctor_pri_2:.2f},",
         "\033[0m"
         "\033[33m"
-        f"{base_case_trial.trial_mean_q_time_doctor_pri_3:.2f},",
+        f"{trial.trial_mean_q_time_doctor_pri_3:.2f},",
         "\033[0m"
         "\033[36m"
-        f"{base_case_trial.trial_mean_q_time_doctor_pri_4:.2f},",
+        f"{trial.trial_mean_q_time_doctor_pri_4:.2f},",
         "\033[0m"
         "\033[32m"
-        f"{base_case_trial.trial_mean_q_time_doctor_pri_5:.2f}",
+        f"{trial.trial_mean_q_time_doctor_pri_5:.2f}",
         "\033[0m"
         "minutes"
     )
     print (
         "SD : "
         "\033[31m"
-        f"{base_case_trial.trial_sd_q_time_doctor_pri_1:.2f},",
+        f"{trial.trial_sd_q_time_doctor_pri_1:.2f},",
         "\033[0m"
         "\033[35m"
-        f"{base_case_trial.trial_sd_q_time_doctor_pri_2:.2f},",
+        f"{trial.trial_sd_q_time_doctor_pri_2:.2f},",
         "\033[0m"
         "\033[33m"
-        f"{base_case_trial.trial_sd_q_time_doctor_pri_3:.2f},",
+        f"{trial.trial_sd_q_time_doctor_pri_3:.2f},",
         "\033[0m"
         "\033[36m"
-        f"{base_case_trial.trial_sd_q_time_doctor_pri_4:.2f},",
+        f"{trial.trial_sd_q_time_doctor_pri_4:.2f},",
         "\033[0m"
         "\033[32m"
-        f"{base_case_trial.trial_sd_q_time_doctor_pri_5:.2f}",
+        f"{trial.trial_sd_q_time_doctor_pri_5:.2f}",
         "\033[0m"
         "minutes"
     )
     print (
         "90th Perc : "
         "\033[31m"
-        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_1:.2f},",
+        f"{trial.trial_perc_90_q_time_doctor_pri_1:.2f},",
         "\033[0m"
         "\033[35m"
-        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_2:.2f},",
+        f"{trial.trial_perc_90_q_time_doctor_pri_2:.2f},",
         "\033[0m"
         "\033[33m"
-        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_3:.2f},",
+        f"{trial.trial_perc_90_q_time_doctor_pri_3:.2f},",
         "\033[0m"
         "\033[36m"
-        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_4:.2f},",
+        f"{trial.trial_perc_90_q_time_doctor_pri_4:.2f},",
         "\033[0m"
         "\033[32m"
-        f"{base_case_trial.trial_perc_90_q_time_doctor_pri_5:.2f}",
+        f"{trial.trial_perc_90_q_time_doctor_pri_5:.2f}",
         "\033[0m"
         "minutes"
     )
     print (
         "SE : "
         "\033[31m"
-        f"{base_case_trial.se_q_time_doctor_pri_1:.2f},",
+        f"{trial.se_q_time_doctor_pri_1:.2f},",
         "\033[0m"
         "\033[35m"
-        f"{base_case_trial.se_q_time_doctor_pri_2:.2f},",
+        f"{trial.se_q_time_doctor_pri_2:.2f},",
         "\033[0m"
         "\033[33m"
-        f"{base_case_trial.se_q_time_doctor_pri_3:.2f},",
+        f"{trial.se_q_time_doctor_pri_3:.2f},",
         "\033[0m"
         "\033[36m"
-        f"{base_case_trial.se_q_time_doctor_pri_4:.2f},",
+        f"{trial.se_q_time_doctor_pri_4:.2f},",
         "\033[0m"
         "\033[32m"
-        f"{base_case_trial.se_q_time_doctor_pri_5:.2f}",
+        f"{trial.se_q_time_doctor_pri_5:.2f}",
         "\033[0m"
         "minutes"
     )
     print (
         "95% CI : "
         "\033[31m"
-        f"({base_case_trial.ci_lower_q_time_doctor_pri_1:.2f},",
-        f"{base_case_trial.ci_upper_q_time_doctor_pri_1:.2f}),"
+        f"({trial.ci_lower_q_time_doctor_pri_1:.2f},",
+        f"{trial.ci_upper_q_time_doctor_pri_1:.2f}),"
         "\033[0m"
         "\033[35m"
-        f"({base_case_trial.ci_lower_q_time_doctor_pri_2:.2f},",
-        f"{base_case_trial.ci_upper_q_time_doctor_pri_2:.2f}),"
+        f"({trial.ci_lower_q_time_doctor_pri_2:.2f},",
+        f"{trial.ci_upper_q_time_doctor_pri_2:.2f}),"
         "\033[0m"
         "\033[33m"
-        f"({base_case_trial.ci_lower_q_time_doctor_pri_3:.2f},",
-        f"{base_case_trial.ci_upper_q_time_doctor_pri_3:.2f}),"
+        f"({trial.ci_lower_q_time_doctor_pri_3:.2f},",
+        f"{trial.ci_upper_q_time_doctor_pri_3:.2f}),"
         "\033[0m"
         "\033[36m"
-        f"({base_case_trial.ci_lower_q_time_doctor_pri_4:.2f},",
-        f"{base_case_trial.ci_upper_q_time_doctor_pri_4:.2f}),"
+        f"({trial.ci_lower_q_time_doctor_pri_4:.2f},",
+        f"{trial.ci_upper_q_time_doctor_pri_4:.2f}),"
         "\033[0m"
         "\033[32m"
-        f"({base_case_trial.ci_lower_q_time_doctor_pri_5:.2f},",
-        f"{base_case_trial.ci_upper_q_time_doctor_pri_5:.2f}),"
+        f"({trial.ci_lower_q_time_doctor_pri_5:.2f},",
+        f"{trial.ci_upper_q_time_doctor_pri_5:.2f}),"
         "\033[0m"
         "minutes"
     )
@@ -1400,21 +1400,21 @@ for trial in list_of_trials:
     print ("MEAN RESOURCE UTILISATION")
     print (
         "Receptionist : ",
-        f"{base_case_trial.trial_mean_receptionist_util_prop*100:.2f}%"
+        f"{trial.trial_mean_receptionist_util_prop*100:.2f}%"
     )
 
     print (
         "Nurse : ",
-        f"{base_case_trial.trial_mean_nurse_util_prop*100:.2f}%"
+        f"{trial.trial_mean_nurse_util_prop*100:.2f}%"
     )
 
     print (
         "Doctor : ",
-        f"{base_case_trial.trial_mean_doctor_util_prop*100:.2f}%"
+        f"{trial.trial_mean_doctor_util_prop*100:.2f}%"
     )
 
     print (
         "Pharmacist : ",
-        f"{base_case_trial.trial_mean_pharmacist_util_prop*100:.2f}%"
+        f"{trial.trial_mean_pharmacist_util_prop*100:.2f}%"
     )
 
