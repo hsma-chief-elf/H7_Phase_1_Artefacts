@@ -38,7 +38,7 @@ class Param:
         num_nurses = 6, # NEW
         num_doctors = 10, # NEW
         num_pharmacists = 2, # NEW
-        results_collection_period = 2880,
+        results_collection_period = 20160, # NEW
         warm_up_period = 10000,
         num_replications = 40,
         num_replications_warm_up_assessment = 20,
