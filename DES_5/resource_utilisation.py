@@ -179,7 +179,10 @@ class Model:
         time_went = self.env.now
         print (f"A nurse went at {time_went:.2f}")
 
-        time_away = time_to_return - time_went
+        # NEW
+        time_away = max(
+            time_to_return - time_went, 0
+        )
         yield self.env.timeout(time_away)
         self.nurse.release(req)
         print (f"A nurse returned at {self.env.now:.2f}")
