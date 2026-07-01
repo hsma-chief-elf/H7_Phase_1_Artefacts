@@ -1199,9 +1199,9 @@ base_case_params = Param(
     patient_iat_csv="ed_iat_table.csv" # NEW - removed warm up override
 )
 
-warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
-warm_up_assessment_trial.run_warm_up_assessment_trial()
-warm_up_assessment_trial.calculate_trial_results()
+#warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
+#warm_up_assessment_trial.run_warm_up_assessment_trial()
+#warm_up_assessment_trial.calculate_trial_results()
 
 list_of_trials = []
 
@@ -1211,24 +1211,21 @@ base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
 list_of_trials.append(base_case_trial)
 
-"""
 wi_1_params = Param(
-    warm_up_period=20000,
-    num_receptionists=2,
+    num_receptionists=1,
     num_nurses=5,
-    num_doctors=8,
-    num_pharmacists=2,
+    num_pharmacists=1,
     patient_iat_csv="ed_iat_table.csv"
 )
 
 wi_1_trial = Trial(
     wi_1_params,
-    "What If Scenario 1 : 2 Receptionists, 3 Nurses"
+    "What If Scenario 1 : 1 Receptionist, 5 Nurses, 1 Pharmacist"
 )
 wi_1_trial.run_trial()
 wi_1_trial.calculate_trial_results()
 list_of_trials.append(wi_1_trial)
-"""
+
 for trial in list_of_trials:
     print (trial.name_of_trial)
     print ("-----------------")
