@@ -13,11 +13,14 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id, priority):
+    def __init__(self, p_id, priority, patience): # NEW
         self.id = p_id
         self.q_time_nurse = pd.NA
         self.arrival_time = pd.NA
         self.priority = priority
+
+        # NEW
+        self.patience = patience
 
 class Param:
     def __init__(
@@ -34,7 +37,13 @@ class Param:
         cumulative_mean_tracker_interval = 5,
         nurse_unav_time = 60,
         nurse_unav_freq = 120,
-        num_nurses_unav = 2
+        num_nurses_unav = 2,
+        p1_patience_lower = 50.0, # NEW
+        p1_patience_upper = 70.0, # NEW
+        p2_patience_lower = 30.0, # NEW
+        p2_patience_upper = 50.0, # NEW
+        p3_patience_lower = 5.0, # NEW
+        p3_patience_upper = 25.0 # NEW
     ):
         self.mean_nurse_consult_time = mean_nurse_consult_time
         self.sd_nurse_consult_time = sd_nurse_consult_time
@@ -64,6 +73,11 @@ class Param:
         self.nurse_unav_freq = nurse_unav_freq
         self.num_nurses_unav = num_nurses_unav
 
+        # NEW
+        self.p1_patience = [p1_patience_lower, p1_patience_upper]
+        self.p2_patience = [p2_patience_lower, p2_patience_upper]
+        self.p3_patience = [p3_patience_lower, p3_patience_upper]
+
 class Model:
     def __init__(self, param, replication_id):
         self.param = param
@@ -76,7 +90,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(4)
+        seeds = ss.spawn(5) # NEW - added another seed spawn
         
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -91,8 +105,13 @@ class Model:
         self.patient_priority_rng = (
             np.random.default_rng(seeds[3])
         )
+        # NEW
+        self.patient_patience_rng = (
+            np.random.default_rng(seeds[4])
+        )
 
         self.list_of_patients = []
+        self.list_of_reneged_patients = [] # NEW
         self.mean_q_time_nurse = pd.NA
         self.sd_q_time_nurse = pd.NA
         self.perc_90_q_time_nurse = pd.NA
@@ -111,6 +130,11 @@ class Model:
         self.nurse_utilisation_prop = pd.NA
         self.nurse_theoretical_unav_total = 0
 
+        # NEW
+        self.num_reneged_p1 = 0
+        self.num_reneged_p2 = 0
+        self.num_reneged_p3 = 0
+
     def generator_patient_arrivals(self):
         while True:
             self.patient_counter += 1
@@ -119,12 +143,37 @@ class Model:
 
             if pat_pri_ran_gen < 0.2:
                 patient_priority = 1
+                # NEW
+                patient_patience = (
+                    self.patient_patience_rng.uniform(
+                        self.param.p1_patience[0],
+                        self.param.p1_patience[1]
+                    )
+                )
             elif pat_pri_ran_gen < 0.7:
                 patient_priority = 2
+                # NEW
+                patient_patience = (
+                    self.patient_patience_rng.uniform(
+                        self.param.p2_patience[0],
+                        self.param.p2_patience[1]
+                    )
+                )
             else:
                 patient_priority = 3
+                # NEW
+                patient_patience = (
+                    self.patient_patience_rng.uniform(
+                        self.param.p3_patience[0],
+                        self.param.p3_patience[1]
+                    )
+                )
 
-            p = Patient(self.patient_counter, patient_priority)
+            p = Patient(
+                self.patient_counter,
+                patient_priority,
+                patient_patience # NEW
+            )
             self.list_of_patients.append(p)
             self.env.process(self.attend_clinic(p))
 
@@ -221,29 +270,43 @@ class Model:
         )
 
         with self.nurse.request(priority=patient.priority) as req:
-            yield req
-            end_q_nurse = self.env.now
-
-            print (
-                f"Patient {patient.id} (Priority {patient.priority})",
-                "is being seen by the nurse"
+            # NEW
+            result_of_queue = (
+                yield req |
+                self.env.timeout(patient.patience)
             )
 
-            if self.env.now > self.param.warm_up_period:
-                patient.q_time_nurse = end_q_nurse - start_q_nurse
-            sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
+            # NEW
+            if req in result_of_queue:
+                end_q_nurse = self.env.now
 
-            if self.env.now > self.param.warm_up_period:
-                end_activity = self.env.now + sampled_nurse_act_time
+                print (
+                    f"Patient {patient.id} (Priority {patient.priority})",
+                    "is being seen by the nurse"
+                )
 
-                if (end_activity < self.param.sim_duration):
-                    self.nurse_utilisation_total += sampled_nurse_act_time
-                else:
-                    self.nurse_utilisation_total += (
-                        self.param.sim_duration - self.env.now
-                    )
+                if self.env.now > self.param.warm_up_period:
+                    patient.q_time_nurse = end_q_nurse - start_q_nurse
+                sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
 
-            yield self.env.timeout(sampled_nurse_act_time)
+                if self.env.now > self.param.warm_up_period:
+                    end_activity = self.env.now + sampled_nurse_act_time
+
+                    if (end_activity < self.param.sim_duration):
+                        self.nurse_utilisation_total += sampled_nurse_act_time
+                    else:
+                        self.nurse_utilisation_total += (
+                            self.param.sim_duration - self.env.now
+                        )
+
+                yield self.env.timeout(sampled_nurse_act_time)
+            else: # NEW
+                if self.env.now > self.param.warm_up_period:
+                    self.list_of_reneged_patients.append(patient)
+                print (
+                    f"Patient {patient.id} (Priority {patient.priority})",
+                    f"RENEGED after waiting {patient.patience:.2f} minutes"
+                )
 
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
@@ -343,6 +406,17 @@ class Model:
             )
         )
 
+        # NEW
+        self.num_reneged_p1 = sum(
+            patient.priority == 1 for patient in self.list_of_reneged_patients
+        )
+        self.num_reneged_p2 = sum(
+            patient.priority == 2 for patient in self.list_of_reneged_patients
+        )
+        self.num_reneged_p3 = sum(
+            patient.priority == 3 for patient in self.list_of_reneged_patients
+        )
+
 class Trial:
     def __init__(self, param):
         self.param = param
@@ -374,6 +448,10 @@ class Trial:
         self.ci_upper_q_time_nurse_pri_2 = pd.NA
         self.ci_upper_q_time_nurse_pri_3 = pd.NA
         self.trial_mean_nurse_util_prop = pd.NA
+        # NEW
+        self.trial_mean_p1_reneged = pd.NA
+        self.trial_mean_p2_reneged = pd.NA
+        self.trial_mean_p3_reneged = pd.NA
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -410,7 +488,8 @@ class Trial:
                 x_col,
                 "id",
                 "arrival_time",
-                "priority"
+                "priority",
+                "patience" # NEW
             ]
         ]
 
@@ -569,6 +648,17 @@ class Trial:
             self.replication_df["nurse_utilisation_prop"].mean()
         )
 
+        # NEW
+        self.trial_mean_p1_reneged = (
+            self.replication_df["num_reneged_p1"].mean()
+        )
+        self.trial_mean_p2_reneged = (
+            self.replication_df["num_reneged_p2"].mean()
+        )
+        self.trial_mean_p3_reneged = (
+            self.replication_df["num_reneged_p3"].mean()
+        )
+
     def plot_arrival_time_frequencies(self):
         self.arrival_times_df = pd.DataFrame(
             columns=["arrival_time"]
@@ -722,4 +812,12 @@ print (
     "Mean nurse utilisation : ",
     f"{base_case_trial.trial_mean_nurse_util_prop*100:.2f}%"
 )
+
+# NEW
+print ()
+
+print ("Mean number of patients reneged :")
+print (f"Priority 1 : {base_case_trial.trial_mean_p1_reneged:.2f}")
+print (f"Priority 2 : {base_case_trial.trial_mean_p2_reneged:.2f}")
+print (f"Priority 3 : {base_case_trial.trial_mean_p3_reneged:.2f}")
 
