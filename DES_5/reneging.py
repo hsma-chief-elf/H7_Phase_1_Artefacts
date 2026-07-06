@@ -107,9 +107,9 @@ class Model:
         self.perc_90_q_time_nurse_pri_2 = pd.NA
         self.perc_90_q_time_nurse_pri_3 = pd.NA
 
-        self.nurse_utilisation_total = 0 # NEW
-        self.nurse_utilisation_prop = pd.NA # NEW
-        self.nurse_theoretical_unav_total = 0 # NEW
+        self.nurse_utilisation_total = 0
+        self.nurse_utilisation_prop = pd.NA
+        self.nurse_theoretical_unav_total = 0
 
     def generator_patient_arrivals(self):
         while True:
@@ -161,7 +161,6 @@ class Model:
                 self.param.nurse_unav_time + self.param.nurse_unav_freq
             )
 
-            # NEW
             if self.env.now > self.param.warm_up_period:
                 for removal_candidate in range(self.param.num_nurses_unav):
                     if (time_to_return < self.param.sim_duration):
@@ -179,7 +178,6 @@ class Model:
         time_went = self.env.now
         print (f"A nurse went at {time_went:.2f}")
 
-        # NEW
         time_away = max(
             time_to_return - time_went, 0
         )
@@ -235,7 +233,6 @@ class Model:
                 patient.q_time_nurse = end_q_nurse - start_q_nurse
             sampled_nurse_act_time = self.nurse_consult_time_dist.sample()
 
-            # NEW
             if self.env.now > self.param.warm_up_period:
                 end_activity = self.env.now + sampled_nurse_act_time
 
@@ -338,7 +335,6 @@ class Model:
             ].quantile(0.9)
         )
 
-        # NEW
         self.nurse_utilisation_prop = (
             self.nurse_utilisation_total / (
                 (
@@ -377,7 +373,7 @@ class Trial:
         self.ci_upper_q_time_nurse_pri_1 = pd.NA
         self.ci_upper_q_time_nurse_pri_2 = pd.NA
         self.ci_upper_q_time_nurse_pri_3 = pd.NA
-        self.trial_mean_nurse_util_prop = pd.NA # NEW
+        self.trial_mean_nurse_util_prop = pd.NA
     
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -569,7 +565,6 @@ class Trial:
                 t * self.se_q_time_nurse_pri_3
             )
         )
-        # NEW
         self.trial_mean_nurse_util_prop = (
             self.replication_df["nurse_utilisation_prop"].mean()
         )
@@ -723,7 +718,6 @@ print (
 
 print ()
 
-# NEW
 print (
     "Mean nurse utilisation : ",
     f"{base_case_trial.trial_mean_nurse_util_prop*100:.2f}%"
