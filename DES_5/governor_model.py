@@ -95,9 +95,9 @@ class Model:
         if self.env.now > self.param.warm_up_period:
             patient.q_time_first_apt = end_q_first_apt - start_q_first_apt
         
-        self.env.timeout(1)
+        yield self.env.timeout(1)
 
-        self.daily_slots.put(1)
+        yield self.daily_slots.put(1)
 
     def run_model(self):
         self.env.process(self.generator_new_referrals())
