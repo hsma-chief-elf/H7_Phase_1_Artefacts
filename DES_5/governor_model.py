@@ -67,3 +67,13 @@ class Model:
 
         self.list_of_patients = []
 
+    def generator_new_referrals(self):
+        while True:
+            self.patient_counter += 1
+            p = Patient(self.patient_counter)
+            self.list_of_patients.append(p)
+            self.env.process(self.attend_first_apt(p))
+            sampled_inter = self.referral_inter_dist.sample()
+            yield self.env.timeout(sampled_inter)
+
+    
