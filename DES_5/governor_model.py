@@ -121,3 +121,57 @@ class Model:
             entity_dataframe["q_time_first_apt"].quantile(0.9)
         )
 
+class Trial:
+    def __init__(self, param):
+        self.param = param
+        self.list_of_simulation_replications = []
+        self.trial_mean_q_time_first_apt = pd.NA
+        self.trial_sd_q_time_first_apt = pd.NA
+        self.trial_perc_90_q_time_first_apt = pd.NA
+        self.ci_lower_q_time_first_apt = pd.NA
+        self.ci_upper_q_time_first_apt = pd.NA
+        self.se_q_time_first_apt = pd.NA
+
+    def run_trial(self):
+        for replication_id in range(self.param.num_replications):
+            model_replication = Model(self.param, replication_id)
+            model_replication.run_model()
+            patient_df = model_replication.convert_entity_list_to_dataframe(
+                model_replication.list_of_patients
+            )
+            model_replication.calculate_run_results(patient_df)
+            self.list_of_simulation_replications.append(model_replication)
+
+    def calculate_trial_results(self):
+        self.replication_df = pd.DataFrame(
+            replication.__dict__ for replication in 
+            self.list_of_simulation_replications
+        )
+
+        self.trial_mean_q_time_first_apt = (
+            self.replication_df["mean_q_time_first_apt"].mean()
+        )
+
+        self.trial_sd_q_time_first_apt = (
+            self.replication_df["mean_q_time_first_apt"].std()
+        )
+
+        self.trial_perc_90_q_time_first_apt = (
+            self.replication_df["mean_q_time_first_apt"].quantile(0.9)
+        )
+
+        self.se_q_time_first_apt = (
+            self.trial_sd_q_time_first_apt /
+            math.sqrt(self.param.num_replications)
+        )
+
+        t = stats.t.ppf(0.975, df=self.param.num_replications - 1)
+
+        self.ci_lower_q_time_first_apt = (
+            self.trial_mean_q_time_first_apt - (t * self.se_q_time_first_apt)
+        )
+
+        self.ci_upper_q_time_first_apt = (
+            self.trial_mean_q_time_first_apt + (t * self.se_q_time_first_apt)
+        )
+
