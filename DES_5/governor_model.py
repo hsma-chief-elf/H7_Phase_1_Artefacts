@@ -1,5 +1,6 @@
 import simpy
 from sim_tools.distributions import Lognormal
+from sim_tools.distributions import Poisson
 import pandas as pd
 import math
 from scipy import stats
@@ -20,7 +21,7 @@ class Param:
     def __init__(
         self,
         num_slots_per_day = 10,
-        mean_referral_inter = 0.1,
+        mean_referrals_per_day = 12.0,
         results_collection_period = 365,
         warm_up_period = 365,
         num_replications = 100,
@@ -29,7 +30,7 @@ class Param:
         cumulative_mean_tracker_interval = 1
     ):
         self.num_slots_per_day = num_slots_per_day
-        self.mean_referral_inter = mean_referral_inter
+        self.mean_referrals_per_day = mean_referrals_per_day
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
@@ -60,8 +61,8 @@ class Model:
         ss = np.random.SeedSequence(self.replication_id)
         seeds = ss.spawn(1)
 
-        self.referral_inter_dist = Exponential(
-            mean=self.param.mean_referral_inter,
+        self.referrals_per_day_dist = Poisson(
+            mean=self.param.mean_referrals_per_day,
             random_seed=seeds[0]
         )
 
@@ -69,11 +70,20 @@ class Model:
 
     def generator_new_referrals(self):
         while True:
-            self.patient_counter += 1
-            p = Patient(self.patient_counter)
-            self.list_of_patients.append(p)
-            self.env.process(self.attend_first_apt(p))
-            sampled_inter = self.referral_inter_dist.sample()
-            yield self.env.timeout(sampled_inter)
+            todays_referrals = self.referrals_per_day_dist.sample()
+            print (f"Day {self.env.now}: {todays_referrals} referrals")
 
-    
+            for referral in range(todays_referrals):
+                self.patient_counter += 1
+                p = Patient(self.patient_counter)
+                self.list_of_patients.append(p)
+                self.env.process(self.attend_first_apt(p))
+
+            yield self.env.timeout(1)
+
+    def attend_first_apt(self, patient):
+        start_q_first_apt = self.env.now
+
+        yield self.daily_slots.get(1)
+
+        end_q_first_apt = self.env.now
