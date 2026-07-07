@@ -23,11 +23,21 @@ class Param:
         self,
         num_slots_per_day = 10,
         mean_referrals_per_day = 12.0,
-        prob_follow_up_from_first_apt = 0.7,
-        prob_follow_up_from_fu_1_to_4 = 0.8,
-        prob_follow_up_from_fu_5_to_8 = 0.6,
-        prob_follow_up_from_fu_9_to_12 = 0.25,
-        prob_follow_up_from_fu_13_plus = 0.05,
+        prob_next_apt_dict = {
+            0:0.7,
+            1:0.9,
+            2:0.85,
+            3:0.75,
+            4:0.6,
+            5:0.5,
+            6:0.4,
+            7:0.35,
+            8:0.25,
+            9:0.2,
+            10:0.15,
+            11:0.1,
+            12:0.05
+        }
         results_collection_period = 365,
         warm_up_period = 365,
         num_replications = 100,
@@ -37,11 +47,7 @@ class Param:
     ):
         self.num_slots_per_day = num_slots_per_day
         self.mean_referrals_per_day = mean_referrals_per_day
-        self.prob_follow_up_from_first_apt = prob_follow_up_from_first_apt
-        self.prob_follow_up_from_fu_1_to_4 = prob_follow_up_from_fu_1_to_4
-        self.prob_follow_up_from_fu_5_to_8 = prob_follow_up_from_fu_5_to_8
-        self.prob_follow_up_from_fu_9_to_12 = prob_follow_up_from_fu_9_to_12
-        self.prob_follow_up_from_fu_13_plus = prob_follow_up_from_fu_13_plus
+        self.prob_next_apt_dict = prob_next_apt_dict
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
