@@ -23,9 +23,11 @@ class Param:
         self,
         num_slots_per_day = 10,
         mean_referrals_per_day = 12.0,
-        prob_follow_up = 0.7,
-        min_follow_ups = 6,
-        max_follow_ups = 12,
+        prob_follow_up_from_first_apt = 0.7,
+        prob_follow_up_from_fu_1_to_4 = 0.8,
+        prob_follow_up_from_fu_5_to_8 = 0.6,
+        prob_follow_up_from_fu_9_to_12 = 0.25,
+        prob_follow_up_from_fu_13_plus = 0.05,
         results_collection_period = 365,
         warm_up_period = 365,
         num_replications = 100,
@@ -35,9 +37,11 @@ class Param:
     ):
         self.num_slots_per_day = num_slots_per_day
         self.mean_referrals_per_day = mean_referrals_per_day
-        self.prob_follow_up = prob_follow_up
-        self.min_follow_ups = min_follow_ups
-        self.max_follow_ups = max_follow_ups
+        self.prob_follow_up_from_first_apt = prob_follow_up_from_first_apt
+        self.prob_follow_up_from_fu_1_to_4 = prob_follow_up_from_fu_1_to_4
+        self.prob_follow_up_from_fu_5_to_8 = prob_follow_up_from_fu_5_to_8
+        self.prob_follow_up_from_fu_9_to_12 = prob_follow_up_from_fu_9_to_12
+        self.prob_follow_up_from_fu_13_plus = prob_follow_up_from_fu_13_plus
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
@@ -66,19 +70,15 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(3)
+        seeds = ss.spawn(2)
 
         self.referrals_per_day_dist = Poisson(
             rate=self.param.mean_referrals_per_day,
             random_seed=seeds[0]
         )
 
-        self.prob_follow_up_rng = (
-            np.random.default_rng(seeds[1])
-        )
-
         self.num_follow_ups_rng = (
-            np.random.default_rng(seeds[2])
+            np.random.default_rng(seeds[1])
         )
 
         self.list_of_patients = []
@@ -110,15 +110,6 @@ class Model:
             patient.q_time_first_apt = end_q_first_apt - start_q_first_apt
         
         yield self.env.timeout(1)
-
-        if self.prob_follow_up_rng.random() < self.param.prob_follow_up:
-            patient.num_follow_ups = self.num_follow_ups_rng.integers(
-                self.param.min_follow_ups,
-                self.param.max_follow_ups,
-                endpoint=True
-            )
-        else:
-            patient.num_follow_ups = 0
 
         yield self.daily_slots.put(1)
 
