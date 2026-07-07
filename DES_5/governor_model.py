@@ -17,6 +17,7 @@ class Patient:
         self.id = p_id
         self.num_follow_ups = pd.NA
         self.q_time_first_apt = pd.NA
+        self.current_apt_id = 0
 
 class Param:
     def __init__(
@@ -37,7 +38,8 @@ class Param:
             10:0.15,
             11:0.1,
             12:0.05
-        }
+        },
+        gap_between_fu_apts = 90,
         results_collection_period = 365,
         warm_up_period = 365,
         num_replications = 100,
@@ -48,6 +50,8 @@ class Param:
         self.num_slots_per_day = num_slots_per_day
         self.mean_referrals_per_day = mean_referrals_per_day
         self.prob_next_apt_dict = prob_next_apt_dict
+        self.max_key_prob_next_apt_dict = max(prob_next_apt_dict)
+        self.gap_between_fu_apts = gap_between_fu_apts
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
@@ -83,7 +87,7 @@ class Model:
             random_seed=seeds[0]
         )
 
-        self.num_follow_ups_rng = (
+        self.follow_up_decider_rng = (
             np.random.default_rng(seeds[1])
         )
 
@@ -101,9 +105,26 @@ class Model:
                 self.patient_counter += 1
                 p = Patient(self.patient_counter)
                 self.list_of_patients.append(p)
-                self.env.process(self.attend_first_apt(p))
+                self.env.process(self.appointment_governor(p))
 
             yield self.env.timeout(1)
+
+    def appointment_governor(self, patient):
+        yield self.env.process(self.attend_first_apt(patient))
+
+        while True:
+            apt_id_clamp = min(
+                patient.current_apt_id,
+                self.param.max_key_prob_next_apt_dict
+            )
+
+            if (
+                self.follow_up_decider_rng.random() <
+                self.param.prob_next_apt_dict[apt_id_clamp]
+            ):
+                patient.current_apt_id += 1
+                yield self.env.process(self.delay_until_apt_due(patient))
+                yield self.env.process(self.attend_fu_apt(patient))
 
     def attend_first_apt(self, patient):
         start_q_first_apt = self.env.now
@@ -118,6 +139,13 @@ class Model:
         yield self.env.timeout(1)
 
         yield self.daily_slots.put(1)
+
+    def delay_until_apt_due(self, patient):
+        yield self.env.timeout(self.param.gap_between_fu_apts)
+
+    def attend_fu_apt(self, patient):
+        yield self.env.timeout(1)
+        print ("FU")
 
     def run_model(self):
         self.env.process(self.generator_new_referrals())
