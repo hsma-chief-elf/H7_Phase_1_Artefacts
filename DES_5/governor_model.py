@@ -54,7 +54,7 @@ class Model:
         self.patient_counter = 0
 
         self.daily_slots = simpy.Container(
-            env,
+            self.env,
             self.param.num_slots_per_day,
             init=self.param.num_slots_per_day
         )
@@ -63,7 +63,7 @@ class Model:
         seeds = ss.spawn(1)
 
         self.referrals_per_day_dist = Poisson(
-            mean=self.param.mean_referrals_per_day,
+            rate=self.param.mean_referrals_per_day,
             random_seed=seeds[0]
         )
 
@@ -174,4 +174,21 @@ class Trial:
         self.ci_upper_q_time_first_apt = (
             self.trial_mean_q_time_first_apt + (t * self.se_q_time_first_apt)
         )
+
+base_case_params = Param()
+base_case_trial = Trial(base_case_params)
+base_case_trial.run_trial()
+base_case_trial.calculate_trial_results()
+
+print ("BASE CASE TRIAL RESULTS")
+print ("-----------------------")
+print ("Queuing Time for First Appointment")
+print (f"Mean: {base_case_trial.trial_mean_q_time_first_apt:.2f} days")
+print (f"SD: {base_case_trial.trial_sd_q_time_first_apt:.2f} days")
+print (f"90th Perc: {base_case_trial.trial_perc_90_q_time_first_apt:.2f} days")
+print (f"SE: {base_case_trial.se_q_time_first_apt:.2f} days")
+print (
+    f"95% CI : ({base_case_trial.ci_lower_q_time_first_apt:.2f}, ",
+    f"{base_case_trial.ci_upper_q_time_first_apt:.2f}) days"
+)
 
