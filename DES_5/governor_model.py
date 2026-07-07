@@ -16,6 +16,7 @@ class Patient:
     def __init__(self, p_id):
         self.id = p_id
         self.num_follow_ups = pd.NA
+        self.q_time_first_apt = pd.NA
 
 class Param:
     def __init__(
@@ -67,6 +68,9 @@ class Model:
         )
 
         self.list_of_patients = []
+        self.mean_q_time_first_apt = pd.NA
+        self.sd_q_time_first_apt = pd.NA
+        self.perc_90_q_time_first_apt = pd.NA
 
     def generator_new_referrals(self):
         while True:
@@ -83,7 +87,37 @@ class Model:
 
     def attend_first_apt(self, patient):
         start_q_first_apt = self.env.now
-
+        
         yield self.daily_slots.get(1)
-
+        
         end_q_first_apt = self.env.now
+
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_first_apt = end_q_first_apt - start_q_first_apt
+        
+        self.env.timeout(1)
+
+        self.daily_slots.put(1)
+
+    def run_model(self):
+        self.env.process(self.generator_new_referrals())
+        self.env.run(until=self.param.sim_duration)
+
+    def convert_entity_list_to_dataframe(self, entity_list):
+        entity_dataframe = pd.DataFrame(
+            entity.__dict__ for entity in entity_list
+        )
+
+        return entity_dataframe
+
+    def calculate_run_results(self, entity_dataframe):
+        self.mean_q_time_first_apt = (
+            entity_dataframe["q_time_first_apt"].mean()
+        )
+        self.sd_q_time_first_apt = (
+            entity_dataframe["q_time_first_apt"].std()
+        )
+        self.perc_90_q_time_first_apt = (
+            entity_dataframe["q_time_first_apt"].quantile(0.9)
+        )
+
