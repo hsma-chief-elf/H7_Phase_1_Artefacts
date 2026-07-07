@@ -17,12 +17,13 @@ class Patient:
         self.id = p_id
         self.num_follow_ups = pd.NA
         self.q_time_first_apt = pd.NA
+        self.q_time_fu_apts = {}
         self.current_apt_id = 0
 
 class Param:
     def __init__(
         self,
-        num_slots_per_day = 10,
+        num_slots_per_day = 20,
         mean_referrals_per_day = 12.0,
         prob_next_apt_dict = {
             0:0.7,
@@ -40,7 +41,7 @@ class Param:
             12:0.05
         },
         gap_between_fu_apts = 90,
-        results_collection_period = 365,
+        results_collection_period = (365 * 5),
         warm_up_period = 365,
         num_replications = 100,
         num_replications_warm_up_assessment = 50,
@@ -99,7 +100,7 @@ class Model:
     def generator_new_referrals(self):
         while True:
             todays_referrals = self.referrals_per_day_dist.sample()
-            print (f"Day {self.env.now}: {todays_referrals} referrals")
+            #print (f"Day {self.env.now}: {todays_referrals} referrals")
 
             for referral in range(todays_referrals):
                 self.patient_counter += 1
@@ -113,6 +114,7 @@ class Model:
         yield self.env.process(self.attend_first_apt(patient))
 
         while True:
+            print (patient.current_apt_id)
             apt_id_clamp = min(
                 patient.current_apt_id,
                 self.param.max_key_prob_next_apt_dict
@@ -144,8 +146,22 @@ class Model:
         yield self.env.timeout(self.param.gap_between_fu_apts)
 
     def attend_fu_apt(self, patient):
+        start_q_fu_apt = self.env.now
+
+        yield self.daily_slots.get(1)
+
+        end_q_fu_apt = self.env.now
+
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_fu_apts[patient.current_apt_id] = (
+                end_q_fu_apt - start_q_fu_apt
+            )
+            
         yield self.env.timeout(1)
-        print ("FU")
+
+        yield self.daily_slots.put(1)
+            
+            #### NEED TO COME UP WITH WAY TO NAME COLUMNS FOR FU RESULTS - maybe store them in a dictionary, then loop through and create the columns once extracted the attributes from the patient
 
     def run_model(self):
         self.env.process(self.generator_new_referrals())
@@ -223,7 +239,7 @@ class Trial:
             self.trial_mean_q_time_first_apt + (t * self.se_q_time_first_apt)
         )
 
-base_case_params = Param()
+base_case_params = Param(num_replications=1)
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
