@@ -181,6 +181,13 @@ class Model:
                     [vars(p) for p in self.list_of_patients]
                 )
 
+                df_patients = df_patients.join(
+                    df_patients["q_time_fu_apts"].apply(pd.Series)
+                )
+                df_patients.drop(
+                    columns=["q_time_fu_apts"], inplace=True
+                )
+
                 row_of_means = df_patients.mean()
                 row_of_means["Simulation Time"] = self.env.now
             else:
@@ -299,16 +306,6 @@ class Trial:
             )
             wu_model_replication.calculate_run_results(patient_df)
             self.list_of_simulation_replications.append(wu_model_replication)
-
-            wu_model_replication.cumulative_mean_df = (
-                wu_model_replication.cumulative_mean_df.join(
-                    wu_model_replication.cumulative_mean_df["q_time_fu_apts"]
-                    .apply(pd.Series)
-                )
-            )
-            wu_model_replication.cumulative_mean_df.drop(
-                columns=["q_time_fu_apts"], inplace=True
-            )
 
             self.list_of_cumulative_mean_dfs.append(
                 wu_model_replication.cumulative_mean_df
