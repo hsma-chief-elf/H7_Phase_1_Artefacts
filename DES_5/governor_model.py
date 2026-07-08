@@ -272,7 +272,7 @@ class Trial:
     def run_trial(self):
         for replication_id in tqdm(
             range(self.param.num_replications),
-            desc=f"Running Trial",
+            desc="Running Trial",
             unit="replication"
         ):
             model_replication = Model(self.param, replication_id)
@@ -287,8 +287,10 @@ class Trial:
         self.warm_up_trial = True
         self.list_of_cumulative_mean_dfs = []
 
-        for wu_replication_id in range(
-            self.param.num_replications_warm_up_assessment
+        for wu_replication_id in tqdm(
+            range(self.param.num_replications_warm_up_assessment),
+            desc="Running Warm Up Assessment",
+            unit="replication"
         ):
             wu_model_replication = Model(self.param, wu_replication_id)
             wu_model_replication.run_warm_up_assessment()
@@ -371,6 +373,11 @@ class Trial:
             fig.write_html(f"govern_cumul_mean_{col}.html")
     
     def calculate_trial_results(self):
+        if self.warm_up_trial:
+            total_reps = self.param.num_replications_warm_up_assessment
+        else:
+            total_reps = self.param.num_replications
+
         self.replication_df = pd.DataFrame(
             replication.__dict__ for replication in 
             self.list_of_simulation_replications
@@ -390,10 +397,10 @@ class Trial:
 
         self.se_q_time_first_apt = (
             self.trial_sd_q_time_first_apt /
-            math.sqrt(self.param.num_replications)
+            math.sqrt(total_reps)
         )
 
-        t = stats.t.ppf(0.975, df=self.param.num_replications - 1)
+        t = stats.t.ppf(0.975, df=total_reps - 1)
 
         self.ci_lower_q_time_first_apt = (
             self.trial_mean_q_time_first_apt - (t * self.se_q_time_first_apt)
@@ -431,7 +438,15 @@ class Trial:
             (fu_means_means + t * fu_se_values).to_dict()
         )
 
+# BASE CASE PARAMETERS DEFINITION
 base_case_params = Param(num_replications=10)
+
+# WARM UP ASSESSMENT
+warm_up_assessment_trial = Trial(base_case_params)
+warm_up_assessment_trial.run_warm_up_assessment_trial()
+warm_up_assessment_trial.calculate_trial_results()
+
+# BASE CASE TRIAL
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
