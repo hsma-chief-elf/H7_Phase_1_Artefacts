@@ -199,6 +199,18 @@ class Model:
         self.env.process(self.generator_new_referrals())
         self.env.run(until=self.param.sim_duration)
 
+    def run_warm_up_assessment(self):
+        old_warm_up = self.param.warm_up_period
+        self.param.warm_up_period = 0
+        self.param.sim_duration_warm_up_assessment = (
+            self.param.results_collection_period *
+            self.param.warm_up_assessment_sim_length_scaler
+        )
+        self.env.process(self.generator_new_referrals())
+        self.env.process(self.cumulative_mean_tracker())
+        self.env.run(until=self.param.sim_duration_warm_up_assessment)
+        self.param.warm_up_period = old_warm_up
+
     def convert_entity_list_to_dataframe(self, entity_list):
         entity_dataframe = pd.DataFrame(
             entity.__dict__ for entity in entity_list
