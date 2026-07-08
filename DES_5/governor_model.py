@@ -24,7 +24,7 @@ class Param:
     def __init__(
         self,
         num_slots_per_day = 40,
-        mean_referrals_per_day = 12.0,
+        mean_referrals_per_day = 5.0,
         prob_next_apt_dict = {
             0:0.7,
             1:0.9,
@@ -44,9 +44,9 @@ class Param:
         results_collection_period = (365 * 5),
         warm_up_period = 365,
         num_replications = 100,
-        num_replications_warm_up_assessment = 50,
-        warm_up_assessment_sim_length_scaler = 20,
-        cumulative_mean_tracker_interval = 1
+        num_replications_warm_up_assessment = 5,
+        warm_up_assessment_sim_length_scaler = 5,
+        cumulative_mean_tracker_interval = 500
     ):
         self.num_slots_per_day = num_slots_per_day
         self.mean_referrals_per_day = mean_referrals_per_day
@@ -275,6 +275,7 @@ class Trial:
         self.ci_lower_q_time_fu_apts = {}
         self.ci_upper_q_time_fu_apts = {}
         self.se_q_time_fu_apts = {}
+        self.warm_up_trial = False
 
     def run_trial(self):
         for replication_id in tqdm(
@@ -313,7 +314,7 @@ class Trial:
 
         reference_df = self.list_of_cumulative_mean_dfs[0]
         x_col = "Simulation Time"
-        y_col = [
+        y_cols = [
             col for col in reference_df.columns if col not in [
                 x_col,
                 "id",
