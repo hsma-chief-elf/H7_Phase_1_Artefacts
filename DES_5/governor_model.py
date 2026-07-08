@@ -114,7 +114,6 @@ class Model:
         yield self.env.process(self.attend_first_apt(patient))
 
         while True:
-            print (patient.current_apt_id)
             apt_id_clamp = min(
                 patient.current_apt_id,
                 self.param.max_key_prob_next_apt_dict
@@ -132,6 +131,8 @@ class Model:
         start_q_first_apt = self.env.now
         
         yield self.daily_slots.get(1)
+
+        print (f"Patient {patient.id} attending FIRST APPOINTMENT")
         
         end_q_first_apt = self.env.now
 
@@ -150,6 +151,11 @@ class Model:
 
         yield self.daily_slots.get(1)
 
+        print (
+            f"Patient {patient.id} attending FU appointment",
+            patient.current_apt_id
+        )
+        
         end_q_fu_apt = self.env.now
 
         if self.env.now > self.param.warm_up_period:
