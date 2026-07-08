@@ -15,7 +15,6 @@ os.chdir(Path(__file__).parent)
 class Patient:
     def __init__(self, p_id):
         self.id = p_id
-        self.num_follow_ups = pd.NA
         self.q_time_first_apt = pd.NA
         self.q_time_fu_apts = {}
         self.current_apt_id = 0
@@ -169,8 +168,6 @@ class Model:
         yield self.env.timeout(1)
 
         yield self.daily_slots.put(1)
-            
-            #### NEED TO COME UP WITH WAY TO NAME COLUMNS FOR FU RESULTS - maybe store them in a dictionary, then loop through and create the columns once extracted the attributes from the patient
 
     def run_model(self):
         self.env.process(self.generator_new_referrals())
@@ -229,6 +226,12 @@ class Trial:
         self.ci_lower_q_time_first_apt = pd.NA
         self.ci_upper_q_time_first_apt = pd.NA
         self.se_q_time_first_apt = pd.NA
+        self.trial_mean_q_time_fu_apts = {}
+        self.trial_sd_q_time_fu_apts = {}
+        self.trial_perc_90_q_time_fu_apts = {}
+        self.ci_lower_q_time_fu_apts = {}
+        self.ci_upper_q_time_fu_apts = {}
+        self.se_q_time_fu_apts = {}
 
     def run_trial(self):
         for replication_id in range(self.param.num_replications):
@@ -271,6 +274,34 @@ class Trial:
 
         self.ci_upper_q_time_first_apt = (
             self.trial_mean_q_time_first_apt + (t * self.se_q_time_first_apt)
+        )
+
+        fu_means = pd.DataFrame(
+            [replication.mean_q_time_fu_apts
+            for replication in self.list_of_simulation_replications]
+        )
+
+        fu_means = fu_means.dropna(axis=1, how="all")
+
+        self.trial_mean_q_time_fu_apts = fu_means.mean().to_dict()
+        self.trial_sd_q_time_fu_apts = fu_means.std().to_dict()
+        self.trial_perc_90_q_time_fu_apts = fu_means.quantile(0.9).to_dict()
+
+        fu_means_means = fu_means.mean()
+        fu_sd_values = fu_means.std()
+        n_fu_means = fu_means.count()
+        fu_se_values = fu_sd_values / np.sqrt(n_fu_means)
+        self.se_q_time_fu_apts = fu_se_values.to_dict()
+
+        t = pd.Series(
+            stats.t.ppf(0.975, df=n_fu_means - 1),
+            index=n_fu_means.index
+        )
+        self.trial_ci_lower_q_time_fu_apts = (
+            (fu_means_means - t * fu_se_values).to_dict()
+        )
+        self.trial_ci_upper_q_time_fu_apts = (
+            (fu_means_means + t * fu_se_values).to_dict()
         )
 
 base_case_params = Param(num_replications=1)
