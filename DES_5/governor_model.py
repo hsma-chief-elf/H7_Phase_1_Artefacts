@@ -178,6 +178,15 @@ class Model:
             entity.__dict__ for entity in entity_list
         )
 
+        entity_dataframe = (
+            entity_dataframe.join(
+                entity_dataframe["q_time_fu_apts"].apply(pd.Series)
+            )
+        )
+        entity_dataframe.drop(columns=["q_time_fu_apts"], inplace=True)
+
+        print (entity_dataframe.head())
+
         return entity_dataframe
 
     def calculate_run_results(self, entity_dataframe):
