@@ -96,6 +96,9 @@ class Model:
         self.mean_q_time_first_apt = pd.NA
         self.sd_q_time_first_apt = pd.NA
         self.perc_90_q_time_first_apt = pd.NA
+        self.mean_q_time_fu_apts = {}
+        self.sd_q_time_fu_apts = {}
+        self.perc_90_q_time_fu_apts = {}
 
     def generator_new_referrals(self):
         while True:
@@ -199,6 +202,22 @@ class Model:
         self.perc_90_q_time_first_apt = (
             entity_dataframe["q_time_first_apt"].quantile(0.9)
         )
+
+        for fu_num in range(1, self.param.max_key_prob_next_apt_dict + 1):
+            if fu_num in entity_dataframe.columns:
+                self.mean_q_time_fu_apts[fu_num] = (
+                    entity_dataframe[fu_num].mean()
+                )
+                self.sd_q_time_fu_apts[fu_num] = (
+                    entity_dataframe[fu_num].std()
+                )
+                self.perc_90_q_time_fu_apts[fu_num] = (
+                    entity_dataframe[fu_num].quantile(0.9)
+                )
+            else:
+                self.mean_q_time_fu_apts[fu_num] = pd.NA
+                self.sd_q_time_fu_apts[fu_num] = pd.NA
+                self.perc_90_q_time_fu_apts[fu_num] = pd.NA
 
 class Trial:
     def __init__(self, param):
