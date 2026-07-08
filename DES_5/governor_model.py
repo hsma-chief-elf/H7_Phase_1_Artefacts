@@ -1,5 +1,4 @@
 import simpy
-from sim_tools.distributions import Lognormal
 from sim_tools.distributions import Poisson
 import pandas as pd
 import math
