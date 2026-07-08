@@ -22,7 +22,7 @@ class Patient:
 class Param:
     def __init__(
         self,
-        num_slots_per_day = 20,
+        num_slots_per_day = 40,
         mean_referrals_per_day = 12.0,
         prob_next_apt_dict = {
             0:0.7,
@@ -185,8 +185,6 @@ class Model:
         )
         entity_dataframe.drop(columns=["q_time_fu_apts"], inplace=True)
 
-        print (entity_dataframe.head())
-
         return entity_dataframe
 
     def calculate_run_results(self, entity_dataframe):
@@ -304,7 +302,7 @@ class Trial:
             (fu_means_means + t * fu_se_values).to_dict()
         )
 
-base_case_params = Param(num_replications=1)
+base_case_params = Param(num_replications=10)
 base_case_trial = Trial(base_case_params)
 base_case_trial.run_trial()
 base_case_trial.calculate_trial_results()
@@ -320,4 +318,20 @@ print (
     f"95% CI : ({base_case_trial.ci_lower_q_time_first_apt:.2f}, ",
     f"{base_case_trial.ci_upper_q_time_first_apt:.2f}) days"
 )
+
+print ()
+
+print ("Queuing Time for Follow-Up Appointments (beyond due date)")
+
+for fu_num in sorted(base_case_trial.trial_mean_q_time_fu_apts):
+    print (
+        f"FU {fu_num} :",
+        f"Mean : {base_case_trial.trial_mean_q_time_fu_apts[fu_num]:.2f}",
+        f"SD : {base_case_trial.trial_sd_q_time_fu_apts[fu_num]:.2f}",
+        f"90th P : {base_case_trial.trial_perc_90_q_time_fu_apts[fu_num]:.2f}",
+        f"SE : {base_case_trial.se_q_time_fu_apts[fu_num]:.2f}",
+        f"95% CI :",
+        f"({base_case_trial.trial_ci_lower_q_time_fu_apts[fu_num]:.2f},",
+        f"{base_case_trial.trial_ci_upper_q_time_fu_apts[fu_num]:.2f}) days"
+    )
 
