@@ -23,7 +23,7 @@ class Param:
     def __init__(
         self,
         num_slots_per_day = 40,
-        mean_referrals_per_day = 5.0,
+        mean_referrals_per_day = 4.0,
         prob_next_apt_dict = {
             0:0.7,
             1:0.9,
@@ -128,6 +128,8 @@ class Model:
                 patient.current_apt_id += 1
                 yield self.env.process(self.delay_until_apt_due(patient))
                 yield self.env.process(self.attend_fu_apt(patient))
+            else:
+                return
 
     def attend_first_apt(self, patient):
         start_q_first_apt = self.env.now
@@ -175,6 +177,7 @@ class Model:
         self.cumulative_mean_df = pd.DataFrame(columns=["Simulation Time"])
 
         while True:
+            print (self.env.now)
             if self.list_of_patients:
                 df_patients = pd.DataFrame(
                     [vars(p) for p in self.list_of_patients]
