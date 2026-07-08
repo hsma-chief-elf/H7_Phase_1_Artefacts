@@ -9,6 +9,7 @@ import plotly.express as px
 import plotly.graph_objects as go
 import os
 from pathlib import Path
+from tqdm import tqdm
 
 os.chdir(Path(__file__).parent)
 
@@ -134,7 +135,7 @@ class Model:
         
         yield self.daily_slots.get(1)
 
-        print (f"Patient {patient.id} attending FIRST APPOINTMENT")
+        #print (f"Patient {patient.id} attending FIRST APPOINTMENT")
         
         end_q_first_apt = self.env.now
 
@@ -153,10 +154,10 @@ class Model:
 
         yield self.daily_slots.get(1)
 
-        print (
-            f"Patient {patient.id} attending FU appointment",
-            patient.current_apt_id
-        )
+        #print (
+        #    f"Patient {patient.id} attending FU appointment",
+        #    patient.current_apt_id
+        #)
         
         end_q_fu_apt = self.env.now
 
@@ -232,7 +233,11 @@ class Trial:
         self.se_q_time_fu_apts = {}
 
     def run_trial(self):
-        for replication_id in range(self.param.num_replications):
+        for replication_id in tqdm(
+            range(self.param.num_replications),
+            desc=f"Running Trial",
+            unit="replication"
+        ):
             model_replication = Model(self.param, replication_id)
             model_replication.run_model()
             patient_df = model_replication.convert_entity_list_to_dataframe(
