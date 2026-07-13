@@ -22,8 +22,8 @@ class Patient:
 class Param:
     def __init__(
         self,
-        num_slots_per_day = 30,
-        mean_referrals_per_day = 12.0,
+        num_slots_per_day = 20,
+        mean_referrals_per_day = 7.0,
         prob_next_apt_dict = {
             0:0.7,
             1:0.9,
@@ -33,11 +33,11 @@ class Param:
             5:0.5,
             6:0.4,
             7:0.35,
-            8:0.25,
-            9:0.2,
-            10:0.15,
-            11:0.1,
-            12:0.05
+            8:0.15,
+            9:0.1,
+            10:0.05,
+            11:0.01,
+            12:0.001
         },
         gap_between_fu_apts = 90,
         results_collection_period = (365 * 5),
