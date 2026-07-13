@@ -22,8 +22,8 @@ class Patient:
 class Param:
     def __init__(
         self,
-        num_slots_per_day = 40,
-        mean_referrals_per_day = 4.0,
+        num_slots_per_day = 30,
+        mean_referrals_per_day = 12.0,
         prob_next_apt_dict = {
             0:0.7,
             1:0.9,
@@ -177,7 +177,6 @@ class Model:
         self.cumulative_mean_df = pd.DataFrame(columns=["Simulation Time"])
 
         while True:
-            print (self.env.now)
             if self.list_of_patients:
                 df_patients = pd.DataFrame(
                     [vars(p) for p in self.list_of_patients]
@@ -313,16 +312,20 @@ class Trial:
             self.list_of_cumulative_mean_dfs.append(
                 wu_model_replication.cumulative_mean_df
             )
-
-        reference_df = self.list_of_cumulative_mean_dfs[0]
+        
         x_col = "Simulation Time"
-        y_cols = [
-            col for col in reference_df.columns if col not in [
-                x_col,
-                "id",
-                "current_apt_id"
-            ]
-        ]
+        y_cols = []
+        
+        for df in self.list_of_cumulative_mean_dfs:
+            for col in df.columns:
+                if (
+                    col not in [
+                        "Simulation Time",
+                        "id",
+                        "current_apt_id"
+                    ] and col not in y_cols
+                ):
+                    y_cols.append(col)
 
         for col in y_cols:
             fig = go.Figure()
@@ -332,7 +335,7 @@ class Trial:
             ):
                 fig.add_trace(go.Scatter(
                     x=df[x_col],
-                    y=df[col],
+                    y=df.get(col, pd.Series(np.nan, index=df.index)),
                     mode="lines",
                     name=f"replication_{i}",
                     line=dict(color="lightblue", width=1)
@@ -341,7 +344,9 @@ class Trial:
             combined = []
 
             for df in self.list_of_cumulative_mean_dfs:
-                combined.append(df[[x_col, col]])
+                combined.append(
+                    df.reindex(columns=[x_col, col])
+                )
 
             df_all_reps = pd.concat(combined)
 
