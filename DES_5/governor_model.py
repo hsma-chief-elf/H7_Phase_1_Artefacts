@@ -23,7 +23,7 @@ class Param:
     def __init__(
         self,
         num_slots_per_day = 20,
-        mean_referrals_per_day = 7.0,
+        mean_referrals_per_day = 6.0,
         prob_next_apt_dict = {
             0:0.7,
             1:0.9,
@@ -444,12 +444,12 @@ class Trial:
         )
 
 # BASE CASE PARAMETERS DEFINITION
-base_case_params = Param(num_replications=10)
+base_case_params = Param()
 
 # WARM UP ASSESSMENT
-warm_up_assessment_trial = Trial(base_case_params)
-warm_up_assessment_trial.run_warm_up_assessment_trial()
-warm_up_assessment_trial.calculate_trial_results()
+#warm_up_assessment_trial = Trial(base_case_params)
+#warm_up_assessment_trial.run_warm_up_assessment_trial()
+#warm_up_assessment_trial.calculate_trial_results()
 
 # BASE CASE TRIAL
 base_case_trial = Trial(base_case_params)
@@ -482,5 +482,40 @@ for fu_num in sorted(base_case_trial.trial_mean_q_time_fu_apts):
         f"95% CI :",
         f"({base_case_trial.trial_ci_lower_q_time_fu_apts[fu_num]:.2f},",
         f"{base_case_trial.trial_ci_upper_q_time_fu_apts[fu_num]:.2f}) days"
+    )
+
+# WHAT IF TRIAL
+what_if_params = Param(mean_referrals_per_day=7.0)
+
+what_if_trial = Trial(what_if_params)
+what_if_trial.run_trial()
+what_if_trial.calculate_trial_results()
+
+print ("WHAT IF TRIAL RESULTS")
+print ("---------------------")
+print ("Queuing Time for First Appointment")
+print (f"Mean: {what_if_trial.trial_mean_q_time_first_apt:.2f} days")
+print (f"SD: {what_if_trial.trial_sd_q_time_first_apt:.2f} days")
+print (f"90th Perc: {what_if_trial.trial_perc_90_q_time_first_apt:.2f} days")
+print (f"SE: {what_if_trial.se_q_time_first_apt:.2f} days")
+print (
+    f"95% CI : ({what_if_trial.ci_lower_q_time_first_apt:.2f}, ",
+    f"{what_if_trial.ci_upper_q_time_first_apt:.2f}) days"
+)
+
+print ()
+
+print ("Queuing Time for Follow-Up Appointments (beyond due date)")
+
+for fu_num in sorted(what_if_trial.trial_mean_q_time_fu_apts):
+    print (
+        f"FU {fu_num} :",
+        f"Mean : {what_if_trial.trial_mean_q_time_fu_apts[fu_num]:.2f}",
+        f"SD : {what_if_trial.trial_sd_q_time_fu_apts[fu_num]:.2f}",
+        f"90th P : {what_if_trial.trial_perc_90_q_time_fu_apts[fu_num]:.2f}",
+        f"SE : {what_if_trial.se_q_time_fu_apts[fu_num]:.2f}",
+        f"95% CI :",
+        f"({what_if_trial.trial_ci_lower_q_time_fu_apts[fu_num]:.2f},",
+        f"{what_if_trial.trial_ci_upper_q_time_fu_apts[fu_num]:.2f}) days"
     )
 
