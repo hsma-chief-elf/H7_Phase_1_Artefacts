@@ -112,25 +112,6 @@ class Model:
 
             yield self.env.timeout(1)
 
-    def appointment_governor(self, patient):
-        yield self.env.process(self.attend_first_apt(patient))
-
-        while True:
-            apt_id_clamp = min(
-                patient.current_apt_id,
-                self.param.max_key_prob_next_apt_dict
-            )
-
-            if (
-                self.follow_up_decider_rng.random() <
-                self.param.prob_next_apt_dict[apt_id_clamp]
-            ):
-                patient.current_apt_id += 1
-                yield self.env.process(self.delay_until_apt_due(patient))
-                yield self.env.process(self.attend_fu_apt(patient))
-            else:
-                return
-
     def attend_first_apt(self, patient):
         start_q_first_apt = self.env.now
         
@@ -170,6 +151,25 @@ class Model:
         yield self.env.timeout(1)
 
         yield self.daily_slots.put(1)
+
+    def appointment_governor(self, patient):
+        yield self.env.process(self.attend_first_apt(patient))
+
+        while True:
+            apt_id_clamp = min(
+                patient.current_apt_id,
+                self.param.max_key_prob_next_apt_dict
+            )
+
+            if (
+                self.follow_up_decider_rng.random() <
+                self.param.prob_next_apt_dict[apt_id_clamp]
+            ):
+                patient.current_apt_id += 1
+                yield self.env.process(self.delay_until_apt_due(patient))
+                yield self.env.process(self.attend_fu_apt(patient))
+            else:
+                return
 
     def cumulative_mean_tracker(self):
         yield self.env.timeout(self.param.cumulative_mean_tracker_interval)
