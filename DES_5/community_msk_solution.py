@@ -295,17 +295,23 @@ class Model:
 
         entity_dataframe = (
             entity_dataframe.join(
-                entity_dataframe["q_time_assessment_apts"].apply(pd.Series)
+                entity_dataframe["q_time_assessment_apts"]
+                .apply(pd.Series)
+                .add_prefix("assessment_")
             )
         )
         entity_dataframe = (
             entity_dataframe.join(
-                entity_dataframe["q_time_physio_apts"].apply(pd.Series)
+                entity_dataframe["q_time_physio_apts"]
+                .apply(pd.Series)
+                .add_prefix("physio_")
             )
         )
         entity_dataframe = (
             entity_dataframe.join(
-                entity_dataframe["q_time_injection_apts"].apply(pd.Series)
+                entity_dataframe["q_time_injection_apts"]
+                .apply(pd.Series)
+                .add_prefix("injection_")
             )
         )
 
