@@ -15,6 +15,7 @@ os.chdir(Path(__file__).parent)
 class Patient:
     def __init__(self, p_id):
         self.id = p_id
+        self.current_apt_type = "assessment"
         self.q_time_assessment_apts = {}
         self.q_time_physio_apts = {}
         self.q_time_injection_apts = {}
@@ -27,6 +28,9 @@ class Param:
         num_physio_slots_per_day = 10,
         num_injection_slots_per_day = 10,
         mean_referrals_per_day = 10.0,
+        fixed_delay_after_assessment = 7,
+        fixed_delay_after_physio = 7,
+        fixed_delay_after_injection = 42,
         results_collection_period = (365) * 5,
         warm_up_period = 365,
         num_replications = 100
@@ -38,7 +42,67 @@ class Param:
         self.num_physio_slots_per_day = num_physio_slots_per_day
         self.num_injection_slots_per_day = num_injection_slots_per_day
         self.mean_referrals_per_day = mean_referrals_per_day
+        self.fixed_delay_after_assessment = fixed_delay_after_assessment
+        self.fixed_delay_after_physio = fixed_delay_after_physio
+        self.fixed_delay_after_injection = fixed_delay_after_injection
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
         self.num_replications = num_replications
 
+class Model:
+    def __init__(self, param, replication_id):
+        self.param = param
+        self.replication_id = replication_id
+        self.env = simpy.Environment()
+        self.patient_counter = 0
+
+        self.daily_assessment_slots = simpy.Container(
+            self.env,
+            self.param.num_assessment_slots_per_day,
+            init=self.param.num_assessment_slots_per_day
+        )
+
+        self.daily_physio_slots = simpy.Container(
+            self.env,
+            self.param.num_physio_slots_per_day,
+            init=self.param.num_physio_slots_per_day
+        )
+
+        self.daily_injection_slots = simpy.Container(
+            self.env,
+            self.param.num_injection_slots_per_day,
+            init=self.param.num_injection_slots_per_day
+        )
+
+        ss = np.random.SeedSequence(self.replication_id)
+        seeds = ss.spawn(4)
+
+        self.referrals_per_day_dist = Poisson(
+            rate=self.param.mean_referrals_per_day,
+            random_seed=seeds[0]
+        )
+
+        self.from_assessment_transition_rng = (
+            np.random.default_rng(seeds[1])
+        )
+
+        self.from_physio_transition_rng = (
+            np.random.default_rng(seeds[2])
+        )
+
+        self.from_injection_transition_rng = (
+            np.random.default_rng(seeds[3])
+        )
+
+        self.list_of_patients = []
+        self.mean_q_time_assessment_apts = {}
+        self.mean_q_time_physio_apts = {}
+        self.mean_q_time_injection_apts = {}
+        self.sd_q_time_assessment_apts = {}
+        self.sd_q_time_physio_apts = {}
+        self.sd_q_time_injection_apts = {}
+        self.perc_90_q_time_assessment_apts = {}
+        self.perc_90_q_time_physio_apts = {}
+        self.perc_90_q_time_injection_apts = {}
+
+    
