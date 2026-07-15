@@ -16,6 +16,9 @@ class Patient:
     def __init__(self, p_id):
         self.id = p_id
         self.current_apt_type = "assessment"
+        self.current_assessment_apt_id = 0
+        self.current_physio_apt_id = 0
+        self.current_injection_apt_id = 0
         self.q_time_assessment_apts = {}
         self.q_time_physio_apts = {}
         self.q_time_injection_apts = {}
@@ -116,5 +119,28 @@ class Model:
                 self.env.process(self.appointment_governor(p))
 
             yield self.env.timeout(1)
+
+    def attend_assessment_apt(self, patient, is_first):
+        start_q_assessment_apt = self.env.now
+
+        if is_first:
+            slots_to_consume = 1.0
+        else:
+            slots_to_consume = 0.5
+
+        yield self.daily_assessment_slots.get(slots_to_consume)
+
+        end_q_assessment_apt = self.env.now
+
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_assessment_apts[
+                patient.current_assessment_apt_id
+            ] = (
+                end_q_assessment_apt - start_q_assessment_apt
+            )
+
+        yield self.env.timeout(1)
+
+        yield self.daily_assessment_slots.put(slots_to_consume)
 
     
