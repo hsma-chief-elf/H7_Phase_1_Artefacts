@@ -186,4 +186,7 @@ class Model:
 
         yield self.daily_injection_slots.put(slots_to_consume)
 
+    def post_appointment_delay(self, time_to_delay):
+        yield self.env.timeout(time_to_delay)
+
     
