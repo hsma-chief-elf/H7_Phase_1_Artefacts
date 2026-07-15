@@ -41,6 +41,9 @@ class Param:
         self.transition_prob_matrix_df = (
             pd.read_csv(transition_prob_matrix_csv)
         )
+        self.transition_prob_matrix_df = (
+            self.transition_prob_matrix_df.set_index("current_state")
+        )
         self.num_assessment_slots_per_day = num_assessment_slots_per_day
         self.num_physio_slots_per_day = num_physio_slots_per_day
         self.num_injection_slots_per_day = num_injection_slots_per_day
@@ -78,23 +81,15 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(4)
+        seeds = ss.spawn(2)
 
         self.referrals_per_day_dist = Poisson(
             rate=self.param.mean_referrals_per_day,
             random_seed=seeds[0]
         )
 
-        self.from_assessment_transition_rng = (
+        self.transition_rng = (
             np.random.default_rng(seeds[1])
-        )
-
-        self.from_physio_transition_rng = (
-            np.random.default_rng(seeds[2])
-        )
-
-        self.from_injection_transition_rng = (
-            np.random.default_rng(seeds[3])
         )
 
         self.list_of_patients = []
@@ -186,7 +181,106 @@ class Model:
 
         yield self.daily_injection_slots.put(slots_to_consume)
 
-    def post_appointment_delay(self, time_to_delay):
+    def post_appointment_delay(self, patient, time_to_delay):
         yield self.env.timeout(time_to_delay)
 
-    
+    def appointment_governor(self, patient):
+        # FIRST APPOINTMENT
+        patient.current_assessment_apt_id += 1
+        yield self.env.process(
+            self.attend_assessment_apt(patient, True)
+        )
+
+        while True:
+            # GRAB TRANSITION PROBABILITIES FROM CURRENT STATE
+            transition_row = (
+                self.param.transition_prob_matrix_df.loc[
+                    patient.current_apt_type
+                ]
+            )
+
+            # DECIDE NEXT ACTIVITY
+            sampled_prob_comp = (
+                self.transition_rng.random()
+            )
+
+            if sampled_prob_comp < transition_row["assessment"]:
+                # DELAY
+                if patient.current_apt_type == "assessment":
+                    delay = self.param.fixed_delay_after_assessment
+                elif patient.current_apt_type == "physio":
+                    delay = self.param.fixed_delay_after_physio
+                else:
+                    delay = self.param.fixed_delay_after_injection
+
+                yield self.env.process(self.post_appointment_delay(
+                    patient, delay
+                ))
+
+                # APPOINTMENT
+                patient.current_apt_type = "assessment"
+                patient.current_assessment_apt_id += 1
+                yield self.env.process(
+                    self.attend_assessment_apt(
+                        patient,
+                        False
+                    )
+                )
+            elif sampled_prob_comp < (
+                transition_row["assessment"] + 
+                transition_row["physio"]
+            ):
+                # DELAY
+                if patient.current_apt_type == "assessment":
+                    delay = self.param.fixed_delay_after_assessment
+                elif patient.current_apt_type == "physio":
+                    delay = self.param.fixed_delay_after_physio
+                else:
+                    delay = self.param.fixed_delay_after_injection
+
+                yield self.env.process(self.post_appointment_delay(
+                    patient, delay
+                ))
+
+                # APPOINTMENT
+                patient.current_apt_type = "physio"
+                patient.current_physio_apt_id += 1
+                if patient.current_physio_apt_id > 1:
+                    first = False
+                else:
+                    first = True
+                yield self.env.process(
+                    self.attend_physio_apt(
+                        patient,
+                        first
+                    )
+                )
+            elif sampled_prob_comp < (
+                transition_row["assessment"] +
+                transition_row["physio"] +
+                transition_row["injection"]
+            ):
+                # DELAY
+                if patient.current_apt_type == "assessment":
+                    delay = self.param.fixed_delay_after_assessment
+                elif patient.current_apt_type == "physio":
+                    delay = self.param.fixed_delay_after_physio
+                else:
+                    delay = self.param.fixed_delay_after_injection
+
+                yield self.env.process(self.post_appointment_delay(
+                    patient, delay
+                ))
+
+                # APPOINTMENT
+                patient.current_apt_type = "injection"
+                patient.current_injection_apt_id += 1
+                yield self.env.process(
+                    self.attend_injection_apt(
+                        patient
+                    )
+                )
+            else:
+                # LEAVE SYSTEM
+                return
+
