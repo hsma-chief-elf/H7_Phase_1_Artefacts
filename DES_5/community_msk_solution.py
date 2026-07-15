@@ -288,4 +288,36 @@ class Model:
         self.env.process(self.generator_new_referrals())
         self.env.run(until=self.param.sim_duration)
 
+    def convert_entity_list_to_dataframe(self, entity_list):
+        entity_dataframe = pd.DataFrame(
+            entity.__dict__ for entity in entity_list
+        )
+
+        entity_dataframe = (
+            entity_dataframe.join(
+                entity_dataframe["q_time_assessment_apts"].apply(pd.Series)
+            )
+        )
+        entity_dataframe = (
+            entity_dataframe.join(
+                entity_dataframe["q_time_physio_apts"].apply(pd.Series)
+            )
+        )
+        entity_dataframe = (
+            entity_dataframe.join(
+                entity_dataframe["q_time_injection_apts"].apply(pd.Series)
+            )
+        )
+
+        entity_dataframe.drop(
+            columns=[
+                "q_time_assessment_apts",
+                "q_time_physio_apts",
+                "q_time_injection_apts"
+            ],
+            inplace=True
+        )
+
+        return entity_dataframe
+
     
