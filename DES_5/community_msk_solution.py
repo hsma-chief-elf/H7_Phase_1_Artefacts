@@ -143,4 +143,27 @@ class Model:
 
         yield self.daily_assessment_slots.put(slots_to_consume)
 
+    def attend_physio_apt(self, patient, is_first):
+        start_q_physio_apt = self.env.now
+
+        if is_first:
+            slots_to_consume = 2.0
+        else:
+            slots_to_consume = 1.0
+
+        yield self.daily_physio_slots.get(slots_to_consume)
+
+        end_q_physio_apt = self.env.now
+
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_physio_apts[
+                patient.current_physio_apt_id
+            ] = (
+                end_q_physio_apt - start_q_physio_apt
+            )
+
+        yield self.env.timeout(1)
+
+        yield self.daily_physio_slots.put(slots_to_consume)
+
     
