@@ -1,3 +1,4 @@
+from numpy.char import startswith
 import simpy
 from sim_tools.distributions import Poisson
 import pandas as pd
@@ -326,4 +327,50 @@ class Model:
 
         return entity_dataframe
 
-    
+    def calculate_run_results(self, entity_dataframe):
+        assessment_apt_cols = [
+            col for col in entity_dataframe.columns
+            if col.startswith("assessment_")
+        ]
+        physio_apt_cols = [
+            col for col in entity_dataframe.columns
+            if col.startswith("physio_")
+        ]
+        injection_apt_cols = [
+            col for col in entity_dataframe.columns
+            if col.startswith("injection_")
+        ]
+
+        for col in assessment_apt_cols:
+            self.mean_q_time_assessment_apts[col] = (
+                entity_dataframe[col].mean()
+            )
+            self.sd_q_time_assessment_apts[col] = (
+                entity_dataframe[col].std()
+            )
+            self.perc_90_q_time_assessment_apts[col] = (
+                entity_dataframe[col].quantile(0.9)
+            )
+
+        for col in physio_apt_cols:
+            self.mean_q_time_physio_apts[col] = (
+                entity_dataframe[col].mean()
+            )
+            self.sd_q_time_physio_apts[col] = (
+                entity_dataframe[col].std()
+            )
+            self.perc_90_q_time_physio_apts[col] = (
+                entity_dataframe[col].quantile(0.9)
+            )
+
+        for col in injection_apt_cols:
+            self.mean_q_time_injection_apts[col] = (
+                entity_dataframe[col].mean()
+            )
+            self.sd_q_time_physio_apts[col] = (
+                entity_dataframe[col].std()
+            )
+            self.perc_90_q_time_physio_apts[col] = (
+                entity_dataframe[col].quantile(0.9)
+            )
+
