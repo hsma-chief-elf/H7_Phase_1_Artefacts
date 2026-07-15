@@ -418,8 +418,6 @@ class Trial:
             for replication in self.list_of_simulation_replications]
         )
 
-        fu_means = fu_means.dropna(axis=1, how="all")
-
         self.trial_mean_q_time_fu_apts = fu_means.mean().to_dict()
         self.trial_sd_q_time_fu_apts = fu_means.std().to_dict()
         self.trial_perc_90_q_time_fu_apts = fu_means.quantile(0.9).to_dict()
