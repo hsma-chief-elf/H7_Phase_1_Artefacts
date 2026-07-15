@@ -284,3 +284,8 @@ class Model:
                 # LEAVE SYSTEM
                 return
 
+    def run_model(self):
+        self.env.process(self.generator_new_referrals())
+        self.env.run(until=self.param.sim_duration)
+
+    
