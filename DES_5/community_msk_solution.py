@@ -166,4 +166,24 @@ class Model:
 
         yield self.daily_physio_slots.put(slots_to_consume)
 
+    def attend_injection_apt(self, patient):
+        start_q_injection_apt = self.env.now
+
+        slots_to_consume = 1.0
+
+        yield self.daily_injection_slots.get(slots_to_consume)
+
+        end_q_injection_apt = self.env.now
+
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_injection_apts[
+                patient.current_injection_apt_id
+            ] = (
+                end_q_injection_apt - start_q_injection_apt
+            )
+
+        yield self.env.timeout(1)
+
+        yield self.daily_injection_slots.put(slots_to_consume)
+
     
