@@ -105,4 +105,16 @@ class Model:
         self.perc_90_q_time_physio_apts = {}
         self.perc_90_q_time_injection_apts = {}
 
+    def generator_new_referrals(self):
+        while True:
+            todays_referrals = self.referrals_per_day_dist.sample()
+
+            for referral in range(todays_referrals):
+                self.patient_counter += 1
+                p = Patient(self.patient_counter)
+                self.list_of_patients.append(p)
+                self.env.process(self.appointment_governor(p))
+
+            yield self.env.timeout(1)
+
     
