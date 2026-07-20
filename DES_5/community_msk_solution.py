@@ -374,3 +374,27 @@ class Model:
                 entity_dataframe[col].quantile(0.9)
             )
 
+class Trial:
+    def __init__(self, param):
+        self.param = param
+        self.list_of_simulation_replications = []
+        self.trial_mean_q_time_assessment_apts = {}
+        self.trial_mean_q_time_physio_apts = {}
+        self.trial_mean_q_time_injection_apts = {}
+        self.trial_sd_q_time_assessment_apts = {}
+        self.trial_sd_q_time_physio_apts = {}
+        self.trial_sd_q_time_injection_apts = {}
+        self.trial_perc_90_assessment_apts = {}
+        self.trial_perc_90_physio_apts = {}
+        self.trial_perc_90_injection_apts = {}
+        self.ci_lower_q_time_assessment_apts = {}
+        self.ci_lower_q_time_physio_apts = {}
+        self.ci_lower_q_time_injection_apts = {}
+        self.ci_upper_q_time_assessment_apts = {}
+        self.ci_upper_q_time_physio_apts = {}
+        self.ci_upper_q_time_injection_apts = {}
+        self.se_q_time_assessment_apts = {}
+        self.se_q_time_physio_apts = {}
+        self.se_q_time_injection_apts = {}
+
+    
