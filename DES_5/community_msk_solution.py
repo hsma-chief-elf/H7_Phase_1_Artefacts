@@ -397,4 +397,18 @@ class Trial:
         self.se_q_time_physio_apts = {}
         self.se_q_time_injection_apts = {}
 
+    def run_trial(self):
+        for replication_id in tqdm(
+            range(self.param.num_replications),
+            desc="Running Trial",
+            unit="replication"
+        ):
+            model_replication = Model(self.param, replication_id)
+            model_replication.run_model()
+            patient_df = model_replication.convert_entity_list_to_dataframe(
+                model_replication.list_of_patients
+            )
+            model_replication.calculate_run_results(patient_df)
+            self.list_of_simulation_replications.append(model_replication)
+
     
