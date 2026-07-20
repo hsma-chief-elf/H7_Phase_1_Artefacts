@@ -54,6 +54,7 @@ class Param:
         self.fixed_delay_after_injection = fixed_delay_after_injection
         self.results_collection_period = results_collection_period
         self.warm_up_period = warm_up_period
+        self.sim_duration = warm_up_period + results_collection_period
         self.num_replications = num_replications
 
 class Model:
@@ -525,4 +526,90 @@ class Trial:
             (injection_means_means + t_injection * injection_se_values)
             .to_dict()
         )
+
+# BASE CASE PARAMETERS DEFINITION
+base_case_params = Param("msk_transition_matrix.csv")
+
+# BASE CASE TRIAL
+base_case_trial = Trial(base_case_params)
+base_case_trial.run_trial()
+base_case_trial.calculate_trial_results()
+
+print ("BASE CASE TRIAL RESULTS")
+print ("-----------------------")
+print ("Queuing time for Assessment Appointments")
+for ass_apt in sorted(base_case_trial.trial_mean_q_time_assessment_apts):
+    print (
+        f"Appointment : {ass_apt}",
+        "Mean :",
+        f"{base_case_trial.trial_mean_q_time_assessment_apts[ass_apt]:.2f}",
+        "SD :",
+        f"{base_case_trial.trial_sd_q_time_assessment_apts[ass_apt]:.2f}",
+        "90th Perc :",
+        f"{base_case_trial.trial_perc_90_assessment_apts[ass_apt]:.2f}",
+        "SE :",
+        f"{base_case_trial.se_q_time_assessment_apts[ass_apt]:.2f}",
+        "95% CI:",
+        f"({base_case_trial.trial_ci_lower_q_time_assessment_apts[ass_apt]:.2f}\
+            ,",
+        f"{base_case_trial.trial_ci_upper_q_time_assessment_apts[ass_apt]:.2f}\
+            ) days"
+    )
+
+print ("First Assessment ONLY")
+print (
+    "Mean :",
+    f"{base_case_trial.trial_mean_q_time_assessment_apts['assessment_1']:.2f}",
+    "SD :",
+    f"{base_case_trial.trial_sd_q_time_assessment_apts['assessment_1']:.2f}",
+    "90th Perc :",
+    f"{base_case_trial.trial_perc_90_assessment_apts['assessment_1']:.2f}",
+    "SE :",
+    f"{base_case_trial.se_q_time_assessment_apts['assessment_1']:.2f}",
+    "95% CI:",
+    f"(\
+    {base_case_trial.trial_ci_lower_q_time_assessment_apts['assessment_1']:.2f}\
+    ,",
+    f"\
+    {base_case_trial.trial_ci_upper_q_time_assessment_apts['assessment_1']:.2f}\
+    ) days"
+)
+
+print ("Queuing time for Physio Appointments")
+for phy_apt in sorted(base_case_trial.trial_mean_q_time_physio_apts):
+    print (
+        f"Appointment : {phy_apt}",
+        "Mean :",
+        f"{base_case_trial.trial_mean_q_time_physio_apts[phy_apt]:.2f}",
+        "SD :",
+        f"{base_case_trial.trial_sd_q_time_physio_apts[phy_apt]:.2f}",
+        "90th Perc :",
+        f"{base_case_trial.trial_perc_90_physio_apts[phy_apt]:.2f}",
+        "SE :",
+        f"{base_case_trial.se_q_time_physio_apts[phy_apt]:.2f}",
+        "95% CI:",
+        f"({base_case_trial.trial_ci_lower_q_time_physio_apts[phy_apt]:.2f}\
+            ,",
+        f"{base_case_trial.trial_ci_upper_q_time_physio_apts[phy_apt]:.2f}\
+            ) days"
+    )
+
+print ("Queuing time for Injection Appointments")
+for inj_apt in sorted(base_case_trial.trial_mean_q_time_injection_apts):
+    print (
+        f"Appointment : {inj_apt}",
+        "Mean :",
+        f"{base_case_trial.trial_mean_q_time_injection_apts[inj_apt]:.2f}",
+        "SD :",
+        f"{base_case_trial.trial_sd_q_time_injection_apts[inj_apt]:.2f}",
+        "90th Perc :",
+        f"{base_case_trial.trial_perc_90_injection_apts[inj_apt]:.2f}",
+        "SE :",
+        f"{base_case_trial.se_q_time_injection_apts[inj_apt]:.2f}",
+        "95% CI:",
+        f"({base_case_trial.trial_ci_lower_q_time_injection_apts[inj_apt]:.2f}\
+            ,",
+        f"{base_case_trial.trial_ci_upper_q_time_injection_apts[inj_apt]:.2f}\
+            ) days"
+    )
 
