@@ -387,12 +387,12 @@ class Trial:
         self.trial_perc_90_assessment_apts = {}
         self.trial_perc_90_physio_apts = {}
         self.trial_perc_90_injection_apts = {}
-        self.ci_lower_q_time_assessment_apts = {}
-        self.ci_lower_q_time_physio_apts = {}
-        self.ci_lower_q_time_injection_apts = {}
-        self.ci_upper_q_time_assessment_apts = {}
-        self.ci_upper_q_time_physio_apts = {}
-        self.ci_upper_q_time_injection_apts = {}
+        self.trial_ci_lower_q_time_assessment_apts = {}
+        self.trial_ci_lower_q_time_physio_apts = {}
+        self.trial_ci_lower_q_time_injection_apts = {}
+        self.trial_ci_upper_q_time_assessment_apts = {}
+        self.trial_ci_upper_q_time_physio_apts = {}
+        self.trial_ci_upper_q_time_injection_apts = {}
         self.se_q_time_assessment_apts = {}
         self.se_q_time_physio_apts = {}
         self.se_q_time_injection_apts = {}
@@ -411,4 +411,118 @@ class Trial:
             model_replication.calculate_run_results(patient_df)
             self.list_of_simulation_replications.append(model_replication)
 
-    
+    def calculate_trial_results(self):
+        self.replication_df = pd.DataFrame(
+            replication.__dict__ for replication in
+            self.list_of_simulation_replications
+        )
+
+        assessment_means = pd.DataFrame(
+            [replication.mean_q_time_assessment_apts
+            for replication in self.list_of_simulation_replications]
+        )
+
+        physio_means = pd.DataFrame(
+            [replication.mean_q_time_physio_apts
+            for replication in self.list_of_simulation_replications]
+        )
+
+        injection_means = pd.DataFrame(
+            [replication.mean_q_time_injection_apts
+            for replication in self.list_of_simulation_replications]
+        )
+
+        self.trial_mean_q_time_assessment_apts = (
+            assessment_means.mean().to_dict()
+        )
+        self.trial_mean_q_time_physio_apts = (
+            physio_means.mean().to_dict
+        )
+        self.trial_mean_q_time_injection_apts = (
+            injection_means.mean().to_dict()
+        )
+
+        self.trial_sd_q_time_assessment_apts = (
+            assessment_means.std().to_dict()
+        )
+        self.trial_sd_q_time_physio_apts = (
+            physio_means.std().to_dict()
+        )
+        self.trial_sd_q_time_injection_apts = (
+            injection_means.std().to_dict()
+        )
+
+        self.trial_perc_90_assessment_apts = (
+            assessment_means.quantile(0.9).to_dict()
+        )
+        self.trial_perc_90_physio_apts = (
+            physio_means.quantile(0.9).to_dict()
+        )
+        self.trial_perc_90_injection_apts = (
+            injection_means.quantile(0.9).to_dict()
+        )
+
+        assessment_means_means = assessment_means.mean()
+        physio_means_means = physio_means.mean()
+        injection_means_means = injection_means.mean()
+
+        assessment_sd_values = assessment_means.std()
+        physio_sd_values = physio_means.std()
+        injection_sd_values = injection_means.std()
+
+        n_assessment_means = assessment_means.count()
+        n_physio_means = physio_means.count()
+        n_injection_means = injection_means.count()
+
+        assessment_se_values = (
+            assessment_sd_values / np.sqrt(n_assessment_means)
+        )
+        physio_se_values = (
+            physio_sd_values / np.sqrt(n_physio_means)
+        )
+        injection_se_values = (
+            injection_sd_values / np.sqrt(n_injection_means)
+        )
+
+        self.se_q_time_assessment_apts = assessment_se_values.to_dict()
+        self.se_q_time_physio_apts = physio_se_values.to_dict()
+        self.se_q_time_injection_apts = injection_se_values.to_dict()
+
+        t_assessment = pd.Series(
+            stats.t.ppf(0.975, df=n_assessment_means - 1),
+            index=n_assessment_means.index
+        )
+        t_physio = pd.Series(
+            stats.t.ppf(0.975, df=n_physio_means - 1),
+            index=n_physio_means.index
+        )
+        t_injection = pd.Series(
+            stats.t.ppf(0.975, df=n_injection_means - 1),
+            index=n_injection_means.index
+        )
+
+        self.trial_ci_lower_q_time_assessment_apts = (
+            (assessment_means_means - t_assessment * assessment_se_values)
+            .to_dict()
+        )
+        self.trial_ci_upper_q_time_assessment_apts = (
+            (assessment_means_means + t_assessment * assessment_se_values)
+            .to_dict()
+        )
+        self.trial_ci_lower_q_time_physio_apts = (
+            (physio_means_means - t_physio * physio_se_values)
+            .to_dict()
+        )
+        self.trial_ci_upper_q_time_physio_apts = (
+            (physio_means_means + t_physio * physio_se_values)
+            .to_dict()
+        )
+        self.trial_ci_lower_q_time_injection_apts = (
+            (injection_means_means - t_injection * injection_se_values)
+            .to_dict()
+        )
+        self.trial_ci_upper_q_time_injection_apts = (
+            (injection_means_means + t_injection * injection_se_values)
+            .to_dict()
+        )
+
