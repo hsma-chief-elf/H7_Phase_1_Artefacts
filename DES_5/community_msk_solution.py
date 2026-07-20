@@ -436,7 +436,7 @@ class Trial:
             assessment_means.mean().to_dict()
         )
         self.trial_mean_q_time_physio_apts = (
-            physio_means.mean().to_dict
+            physio_means.mean().to_dict()
         )
         self.trial_mean_q_time_injection_apts = (
             injection_means.mean().to_dict()
