@@ -1,5 +1,5 @@
 import simpy
-from sim_tools.distributions import Lognormal
+from sim_tools.distributions import Lognormal, Exponential # NEW
 from sim_tools.time_dependent import NSPPThinning
 import pandas as pd
 import math
@@ -14,7 +14,7 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id, priority):
+    def __init__(self, p_id, priority, patience_treatment): # NEW
         self.id = p_id
 
         self.q_time_reg = pd.NA
@@ -25,6 +25,9 @@ class Patient:
         self.arrival_time = pd.NA
 
         self.priority = priority
+
+        # NEW
+        self.patience_treatment = patience_treatment
 
 class Param:
     def __init__(
@@ -49,7 +52,8 @@ class Param:
         num_nurses_unav = 1,
         doctor_unav_time = 120,
         doctor_unav_freq = 240,
-        num_doctors_unav = 3
+        num_doctors_unav = 3,
+        mean_patience_treatment = 120 # NEW
     ):
         self.mean_reg_time = mean_reg_time
         self.sd_reg_time = sd_reg_time
@@ -131,6 +135,8 @@ class Param:
         self.doctor_unav_time = doctor_unav_time
         self.doctor_unav_freq = doctor_unav_freq
         self.num_doctors_unav = num_doctors_unav
+        # NEW
+        self.mean_patience_treatment = mean_patience_treatment
 
 class Model:
     def __init__(self, param, replication_id):
@@ -158,7 +164,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(17)
+        seeds = ss.spawn(18) # NEW - added additional eed spawn
 
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -247,7 +253,14 @@ class Model:
             np.random.default_rng(seeds[8])
         )
 
+        # NEW
+        self.patience_treatment_dist = Exponential(
+            mean=self.param.mean_patience_treatment,
+            random_seed=seeds[17]
+        )
+
         self.list_of_patients = []
+        self.list_of_reneged_patients = [] # NEW
         self.mean_q_time_reg = pd.NA
         self.sd_q_time_reg = pd.NA
         self.perc_90_q_time_reg = pd.NA
@@ -287,6 +300,8 @@ class Model:
         self.pharmacist_util_total = 0
         self.pharmacist_theo_unav_total = 0
         self.pharmacist_util_prop = pd.NA
+        # NEW
+        self.num_reneged_treatment = 0
 
     def generator_patient_arrivals(self):
         while True:
@@ -305,7 +320,16 @@ class Model:
             else:
                 patient_priority = 5
 
-            p = Patient(self.patient_counter, patient_priority)
+            # NEW
+            sampled_patience_treatment = (
+                self.patience_treatment_dist.sample()
+            )
+
+            p = Patient(
+                self.patient_counter,
+                patient_priority,
+                sampled_patience_treatment # NEW
+            )
             self.list_of_patients.append(p)
             self.env.process(self.attend_ed(p))
             sampled_inter = self.patient_inter_dist.sample(
@@ -512,35 +536,46 @@ class Model:
             start_q_treat = self.env.now
 
             with self.doctor.request(priority=patient.priority) as req:
-                yield req
-                end_q_treat = self.env.now
+                # NEW
+                result_of_queue = (
+                    yield req |
+                    self.env.timeout(patient.patience_treatment)
+                )
 
-                if self.env.now > self.param.warm_up_period:
-                    patient.q_time_treat = end_q_treat - start_q_treat
-                
-                if patient.priority == 1:
-                    chosen_treat_act_dist = self.treat_act_time_dist_p1
-                elif patient.priority == 2:
-                    chosen_treat_act_dist = self.treat_act_time_dist_p2
-                elif patient.priority == 3:
-                    chosen_treat_act_dist = self.treat_act_time_dist_p3
-                elif patient.priority == 4:
-                    chosen_treat_act_dist = self.treat_act_time_dist_p4
-                else:
-                    chosen_treat_act_dist = self.treat_act_time_dist_p5
-                sampled_treat_act_time = chosen_treat_act_dist.sample()
+                # NEW
+                if req in result_of_queue:
+                    end_q_treat = self.env.now
 
-                if self.env.now > self.param.warm_up_period:
-                    end_activity = self.env.now + sampled_treat_act_time
-
-                    if (end_activity < self.param.sim_duration):
-                        self.doctor_util_total += sampled_treat_act_time
+                    if self.env.now > self.param.warm_up_period:
+                        patient.q_time_treat = end_q_treat - start_q_treat
+                    
+                    if patient.priority == 1:
+                        chosen_treat_act_dist = self.treat_act_time_dist_p1
+                    elif patient.priority == 2:
+                        chosen_treat_act_dist = self.treat_act_time_dist_p2
+                    elif patient.priority == 3:
+                        chosen_treat_act_dist = self.treat_act_time_dist_p3
+                    elif patient.priority == 4:
+                        chosen_treat_act_dist = self.treat_act_time_dist_p4
                     else:
-                        self.doctor_util_total += (
-                            self.param.sim_duration - self.env.now
-                        )
+                        chosen_treat_act_dist = self.treat_act_time_dist_p5
+                    sampled_treat_act_time = chosen_treat_act_dist.sample()
 
-                yield self.env.timeout(sampled_treat_act_time)
+                    if self.env.now > self.param.warm_up_period:
+                        end_activity = self.env.now + sampled_treat_act_time
+
+                        if (end_activity < self.param.sim_duration):
+                            self.doctor_util_total += sampled_treat_act_time
+                        else:
+                            self.doctor_util_total += (
+                                self.param.sim_duration - self.env.now
+                            )
+
+                    yield self.env.timeout(sampled_treat_act_time)
+                else:
+                    if self.env.now > self.param.warm_up_period:
+                        self.list_of_reneged_patients.append(patient)
+                        return
 
             if (
                 self.treat_pharm_branch_prob_rng.random() <
@@ -748,6 +783,9 @@ class Model:
             )
         )
 
+        # NEW
+        self.num_reneged_treatment = len(self.list_of_reneged_patients)
+
 class Trial:
     def __init__(self, param, name_of_trial="Trial"):
         self.param = param
@@ -814,6 +852,7 @@ class Trial:
         self.trial_mean_nurse_util_prop = pd.NA
         self.trial_mean_doctor_util_prop = pd.NA
         self.trial_mean_pharmacist_util_prop = pd.NA
+        self.trial_mean_reneged_treatment = pd.NA # NEW
 
     def run_trial(self):
         for replication_id in tqdm(
@@ -856,7 +895,8 @@ class Trial:
                 x_col,
                 "id",
                 "arrival_time",
-                "priority"
+                "priority",
+                "patience" # NEW
             ]
         ]
 
@@ -1125,6 +1165,11 @@ class Trial:
         )
         self.trial_mean_pharmacist_util_prop = (
             self.replication_df["pharmacist_util_prop"].mean()
+        )
+
+        # NEW
+        self.trial_mean_reneged_treatment = (
+            self.replication_df["num_reneged_treatment"].mean()
         )
 
     def plot_arrival_time_frequencies(self):
@@ -1405,5 +1450,11 @@ for trial in list_of_trials:
     print (
         "Pharmacist : ",
         f"{trial.trial_mean_pharmacist_util_prop*100:.2f}%"
+    )
+
+    # NEW
+    print (
+        "Mean Number Reneged waiting for Treatment : ",
+        f"{trial.trial_mean_reneged_treatment:.2f}"
     )
 
