@@ -588,3 +588,66 @@ for inj_apt in sorted(base_case_trial.trial_mean_q_time_injection_apts):
         f"{base_case_trial.trial_ci_upper_q_time_injection_apts[inj_apt]:.2f})"
     )
 
+# WHAT IF PARAMETERS DEFINITION
+what_if_params = Param(
+    "msk_transition_matrix.csv",
+    num_physio_slots_per_day=20
+)
+
+# WHAT IF TRIAL
+what_if_trial = Trial(what_if_params)
+what_if_trial.run_trial()
+what_if_trial.calculate_trial_results()
+
+print ("WHAT IF TRIAL RESULTS")
+print ("---------------------")
+print ("Queuing time for Assessment Appointments")
+for ass_apt in sorted(what_if_trial.trial_mean_q_time_assessment_apts):
+    print (
+        f"Appointment : {ass_apt}",
+        "Mean :",
+        f"{what_if_trial.trial_mean_q_time_assessment_apts[ass_apt]:.2f}",
+        "SD :",
+        f"{what_if_trial.trial_sd_q_time_assessment_apts[ass_apt]:.2f}",
+        "90th Perc :",
+        f"{what_if_trial.trial_perc_90_assessment_apts[ass_apt]:.2f}",
+        "SE :",
+        f"{what_if_trial.se_q_time_assessment_apts[ass_apt]:.2f}",
+        "95% CI:",
+        f"({what_if_trial.trial_ci_lower_q_time_assessment_apts[ass_apt]:.2f},",
+        f"{what_if_trial.trial_ci_upper_q_time_assessment_apts[ass_apt]:.2f})"
+    )
+
+print ("Queuing time for Physio Appointments")
+for phy_apt in sorted(what_if_trial.trial_mean_q_time_physio_apts):
+    print (
+        f"Appointment : {phy_apt}",
+        "Mean :",
+        f"{what_if_trial.trial_mean_q_time_physio_apts[phy_apt]:.2f}",
+        "SD :",
+        f"{what_if_trial.trial_sd_q_time_physio_apts[phy_apt]:.2f}",
+        "90th Perc :",
+        f"{what_if_trial.trial_perc_90_physio_apts[phy_apt]:.2f}",
+        "SE :",
+        f"{what_if_trial.se_q_time_physio_apts[phy_apt]:.2f}",
+        "95% CI:",
+        f"({what_if_trial.trial_ci_lower_q_time_physio_apts[phy_apt]:.2f},",
+        f"{what_if_trial.trial_ci_upper_q_time_physio_apts[phy_apt]:.2f})"
+    )
+
+print ("Queuing time for Injection Appointments")
+for inj_apt in sorted(what_if_trial.trial_mean_q_time_injection_apts):
+    print (
+        f"Appointment : {inj_apt}",
+        "Mean :",
+        f"{what_if_trial.trial_mean_q_time_injection_apts[inj_apt]:.2f}",
+        "SD :",
+        f"{what_if_trial.trial_sd_q_time_injection_apts[inj_apt]:.2f}",
+        "90th Perc :",
+        f"{what_if_trial.trial_perc_90_injection_apts[inj_apt]:.2f}",
+        "SE :",
+        f"{what_if_trial.se_q_time_injection_apts[inj_apt]:.2f}",
+        "95% CI:",
+        f"({what_if_trial.trial_ci_lower_q_time_injection_apts[inj_apt]:.2f},",
+        f"{what_if_trial.trial_ci_upper_q_time_injection_apts[inj_apt]:.2f})"
+    )
