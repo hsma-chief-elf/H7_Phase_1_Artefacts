@@ -14,7 +14,7 @@ from pathlib import Path
 os.chdir(Path(__file__).parent)
 
 class Patient:
-    def __init__(self, p_id, priority): # NEW
+    def __init__(self, p_id, priority):
         self.id = p_id
 
         self.q_time_reg = pd.NA
@@ -24,7 +24,7 @@ class Patient:
         
         self.arrival_time = pd.NA
 
-        self.priority = priority # NEW
+        self.priority = priority
 
 class Param:
     def __init__(
@@ -34,26 +34,26 @@ class Param:
         sd_reg_time = 1.2,
         mean_pharm_time = 6,
         sd_pharm_time = 2,
-        num_receptionists = 2, # NEW
-        num_nurses = 6, # NEW
-        num_doctors = 10, # NEW
-        num_pharmacists = 2, # NEW
-        results_collection_period = 20160, # NEW
+        num_receptionists = 2,
+        num_nurses = 6,
+        num_doctors = 10,
+        num_pharmacists = 2,
+        results_collection_period = 20160,
         warm_up_period = 10000,
         num_replications = 40,
         num_replications_warm_up_assessment = 20,
         warm_up_assessment_sim_length_scaler = 10,
         cumulative_mean_tracker_interval = 100,
-        nurse_unav_time = 480, # NEW
-        nurse_unav_freq = 960, # NEW
-        num_nurses_unav = 1, # NEW
-        doctor_unav_time = 120, # NEW
-        doctor_unav_freq = 240, # NEW
-        num_doctors_unav = 3 # NEW
+        nurse_unav_time = 480,
+        nurse_unav_freq = 960,
+        num_nurses_unav = 1,
+        doctor_unav_time = 120,
+        doctor_unav_freq = 240,
+        num_doctors_unav = 3
     ):
         self.mean_reg_time = mean_reg_time
         self.sd_reg_time = sd_reg_time
-        # NEW
+        
         self.mean_triage_time_dict = {
             1:20,
             2:16,
@@ -61,7 +61,7 @@ class Param:
             4:8,
             5:7
         }
-        # NEW
+        
         self.sd_triage_time_dict = {
             1:7,
             2:5,
@@ -69,7 +69,7 @@ class Param:
             4:3,
             5:1
         }
-        # NEW
+        
         self.mean_treat_time_dict = {
             1:240,
             2:100,
@@ -77,7 +77,7 @@ class Param:
             4:20,
             5:15
         }
-        # NEW
+        
         self.sd_treat_time_dict = {
             1:90,
             2:60,
@@ -91,7 +91,7 @@ class Param:
         self.num_nurses = num_nurses
         self.num_doctors = num_doctors
         self.num_pharmacists = num_pharmacists
-        # NEW
+        
         self.branch_prob_triage_to_pharm_dict = {
             1:0.01,
             2:0.03,
@@ -99,7 +99,7 @@ class Param:
             4:0.6,
             5:0.85
         }
-        # NEW
+        
         self.branch_prob_treat_to_pharm_dict = {
             1:0.9,
             2:0.7,
@@ -125,7 +125,6 @@ class Param:
             pd.read_csv(patient_iat_csv)
         )
 
-        # NEW
         self.nurse_unav_time = nurse_unav_time
         self.nurse_unav_freq = nurse_unav_freq
         self.num_nurses_unav = num_nurses_unav
@@ -144,12 +143,11 @@ class Model:
             capacity=self.param.num_receptionists
         )
         
-        # NEW
         self.nurse = simpy.PriorityResource(
             self.env,
             capacity=self.param.num_nurses
         )
-        # NEW
+        
         self.doctor = simpy.PriorityResource(
             self.env,
             capacity=self.param.num_doctors
@@ -160,7 +158,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(17) # NEW - added extra seed spawns
+        seeds = ss.spawn(17)
 
         self.patient_inter_dist = NSPPThinning(
             data=param.pt_arrivals_time_dependent_df,
@@ -173,61 +171,61 @@ class Model:
             stdev=self.param.sd_reg_time,
             random_seed=seeds[1]
         )
-        # NEW
+        
         self.triage_act_time_dist_p1 = Lognormal(
             mean=self.param.mean_triage_time_dict[1],
             stdev=self.param.sd_triage_time_dict[1],
             random_seed=seeds[2]
         )
-        # NEW
+        
         self.triage_act_time_dist_p2 = Lognormal(
             mean=self.param.mean_triage_time_dict[2],
             stdev=self.param.sd_triage_time_dict[2],
             random_seed=seeds[9]
         )
-        # NEW
+        
         self.triage_act_time_dist_p3 = Lognormal(
             mean=self.param.mean_triage_time_dict[3],
             stdev=self.param.sd_triage_time_dict[3],
             random_seed=seeds[10]
         )
-        # NEW
+        
         self.triage_act_time_dist_p4 = Lognormal(
             mean=self.param.mean_triage_time_dict[4],
             stdev=self.param.sd_triage_time_dict[4],
             random_seed=seeds[11]
         )
-        # NEW
+        
         self.triage_act_time_dist_p5 = Lognormal(
             mean=self.param.mean_triage_time_dict[5],
             stdev=self.param.sd_triage_time_dict[5],
             random_seed=seeds[12]
         )
-        # NEW
+        
         self.treat_act_time_dist_p1 = Lognormal(
             mean=self.param.mean_treat_time_dict[1],
             stdev=self.param.sd_treat_time_dict[1],
             random_seed=seeds[3]
         )
-        # NEW
+        
         self.treat_act_time_dist_p2 = Lognormal(
             mean=self.param.mean_treat_time_dict[2],
             stdev=self.param.sd_treat_time_dict[2],
             random_seed=seeds[13]
         )
-        # NEW
+        
         self.treat_act_time_dist_p3 = Lognormal(
             mean=self.param.mean_treat_time_dict[3],
             stdev=self.param.sd_treat_time_dict[3],
             random_seed=seeds[14]
         )
-        # NEW
+        
         self.treat_act_time_dist_p4 = Lognormal(
             mean=self.param.mean_treat_time_dict[4],
             stdev=self.param.sd_treat_time_dict[4],
             random_seed=seeds[15]
         )
-        # NEW
+        
         self.treat_act_time_dist_p5 = Lognormal(
             mean=self.param.mean_treat_time_dict[5],
             stdev=self.param.sd_treat_time_dict[5],
@@ -244,7 +242,7 @@ class Model:
         self.treat_pharm_branch_prob_rng = (
             np.random.default_rng(seeds[6])
         )
-        # NEW
+        
         self.patient_priority_rng = (
             np.random.default_rng(seeds[8])
         )
@@ -262,7 +260,6 @@ class Model:
         self.mean_q_time_pharm = pd.NA
         self.sd_q_time_pharm = pd.NA
         self.perc_90_q_time_pharm = pd.NA
-        # NEW
         self.mean_q_time_doctor_pri_1 = pd.NA
         self.mean_q_time_doctor_pri_2 = pd.NA
         self.mean_q_time_doctor_pri_3 = pd.NA
@@ -278,7 +275,6 @@ class Model:
         self.perc_90_q_time_doctor_pri_3 = pd.NA
         self.perc_90_q_time_doctor_pri_4 = pd.NA
         self.perc_90_q_time_doctor_pri_5 = pd.NA
-        # NEW
         self.receptionist_util_total = 0
         self.receptionist_theo_unav_total = 0
         self.receptionist_util_prop = pd.NA
@@ -296,7 +292,6 @@ class Model:
         while True:
             self.patient_counter += 1
 
-            # NEW
             pat_pri_ran_gen = self.patient_priority_rng.random()
 
             if pat_pri_ran_gen < 0.05:
@@ -310,7 +305,7 @@ class Model:
             else:
                 patient_priority = 5
 
-            p = Patient(self.patient_counter, patient_priority) # NEW
+            p = Patient(self.patient_counter, patient_priority)
             self.list_of_patients.append(p)
             self.env.process(self.attend_ed(p))
             sampled_inter = self.patient_inter_dist.sample(
@@ -318,7 +313,6 @@ class Model:
             )
             yield self.env.timeout(sampled_inter)
 
-    # NEW
     def obstruct_nurse(self):
         next_departure_time = self.param.nurse_unav_freq
 
@@ -352,7 +346,6 @@ class Model:
                             self.param.sim_duration - self.env.now
                         )
 
-    # NEW
     def obstruct_doctor(self):
         next_departure_time = self.param.doctor_unav_freq
 
@@ -445,7 +438,6 @@ class Model:
                 patient.q_time_reg = end_q_reg - start_q_reg
             sampled_reg_act_time = self.reg_act_time_dist.sample()
             
-            # NEW
             if self.env.now > self.param.warm_up_period:
                 end_activity = self.env.now + sampled_reg_act_time
 
@@ -465,7 +457,7 @@ class Model:
             end_q_triage = self.env.now
             if self.env.now > self.param.warm_up_period:
                 patient.q_time_triage = end_q_triage - start_q_triage
-            # NEW
+
             if patient.priority == 1:
                 chosen_triage_act_dist = self.triage_act_time_dist_p1
             elif patient.priority == 2:
@@ -478,7 +470,6 @@ class Model:
                 chosen_triage_act_dist = self.triage_act_time_dist_p5
             sampled_triage_act_time = chosen_triage_act_dist.sample()
 
-            # NEW
             if self.env.now > self.param.warm_up_period:
                 end_activity = self.env.now + sampled_triage_act_time
 
@@ -493,7 +484,7 @@ class Model:
 
         if (
             self.triage_pharm_branch_prob_rng.random() <
-            self.param.branch_prob_triage_to_pharm_dict[patient.priority] # NEW
+            self.param.branch_prob_triage_to_pharm_dict[patient.priority]
         ):
             start_q_pharm = self.env.now
 
@@ -504,7 +495,6 @@ class Model:
                     patient.q_time_pharmacy = end_q_pharm - start_q_pharm
                 sampled_pharm_act_time = self.pharm_act_time_dist.sample()
                 
-                # NEW
                 if self.env.now > self.param.warm_up_period:
                     end_activity = self.env.now + sampled_pharm_act_time
 
@@ -521,13 +511,13 @@ class Model:
         else:
             start_q_treat = self.env.now
 
-            with self.doctor.request(priority=patient.priority) as req: # NEW
+            with self.doctor.request(priority=patient.priority) as req:
                 yield req
                 end_q_treat = self.env.now
 
                 if self.env.now > self.param.warm_up_period:
                     patient.q_time_treat = end_q_treat - start_q_treat
-                # NEW
+                
                 if patient.priority == 1:
                     chosen_treat_act_dist = self.treat_act_time_dist_p1
                 elif patient.priority == 2:
@@ -540,7 +530,6 @@ class Model:
                     chosen_treat_act_dist = self.treat_act_time_dist_p5
                 sampled_treat_act_time = chosen_treat_act_dist.sample()
 
-                # NEW
                 if self.env.now > self.param.warm_up_period:
                     end_activity = self.env.now + sampled_treat_act_time
 
@@ -555,7 +544,7 @@ class Model:
 
             if (
                 self.treat_pharm_branch_prob_rng.random() <
-                self.param.branch_prob_treat_to_pharm_dict[patient.priority]#NEW
+                self.param.branch_prob_treat_to_pharm_dict[patient.priority]
             ):
                 start_q_pharm = self.env.now
 
@@ -566,7 +555,6 @@ class Model:
                         patient.q_time_pharmacy = end_q_pharm - start_q_pharm
                     sampled_pharm_act_time = self.pharm_act_time_dist.sample()
 
-                    # NEW
                     if self.env.now > self.param.warm_up_period:
                         end_activity = self.env.now + sampled_pharm_act_time
 
@@ -583,8 +571,8 @@ class Model:
             
     def run_model(self):
         self.env.process(self.generator_patient_arrivals())
-        self.env.process(self.obstruct_nurse()) # NEW
-        self.env.process(self.obstruct_doctor()) # NEW
+        self.env.process(self.obstruct_nurse())
+        self.env.process(self.obstruct_doctor())
         self.env.run(until=self.param.sim_duration)
 
     def run_warm_up_assessment(self):
@@ -596,8 +584,8 @@ class Model:
         )
         self.env.process(self.generator_patient_arrivals())
         self.env.process(self.cumulative_mean_tracker())
-        self.env.process(self.obstruct_nurse()) # NEW
-        self.env.process(self.obstruct_doctor()) # NEW
+        self.env.process(self.obstruct_nurse())
+        self.env.process(self.obstruct_doctor())
         self.env.run(until=self.param.sim_duration_warm_up_assessment)
         self.param.warm_up_period = old_warm_up
 
@@ -633,7 +621,6 @@ class Model:
 
         self.replication_arrival_times = entity_dataframe["arrival_time"]
 
-        # NEW
         self.mean_q_time_doctor_pri_1 = (
             entity_dataframe.loc[
                 entity_dataframe["priority"] == 1,
@@ -725,7 +712,6 @@ class Model:
             ].quantile(0.9)
         )
 
-        # NEW
         self.receptionist_util_prop = (
             self.receptionist_util_total / (
                 (
@@ -735,7 +721,6 @@ class Model:
             )
         )
 
-        # NEW
         self.nurse_util_prop = (
             self.nurse_util_total / (
                 (
@@ -745,7 +730,6 @@ class Model:
             )
         )
 
-        # NEW
         self.doctor_util_prop = (
             self.doctor_util_total / (
                 (
@@ -755,7 +739,6 @@ class Model:
             )
         )
 
-        # NEW
         self.pharmacist_util_prop = (
             self.pharmacist_util_total / (
                 (
@@ -797,7 +780,6 @@ class Trial:
         self.se_q_time_pharm = pd.NA
         self.warm_up_trial = False
 
-        # NEW
         self.trial_mean_q_time_doctor_pri_1 = pd.NA
         self.trial_mean_q_time_doctor_pri_2 = pd.NA
         self.trial_mean_q_time_doctor_pri_3 = pd.NA
@@ -874,7 +856,7 @@ class Trial:
                 x_col,
                 "id",
                 "arrival_time",
-                "priority" # NEW
+                "priority"
             ]
         ]
 
@@ -924,8 +906,8 @@ class Trial:
             )
 
             fig.show()
-            # NEW - renamed file to ed_model_3
-            fig.write_html(f"ed_model_3_cumul_mean_{col}.html")
+            # NEW - renamed file to ed_model_4
+            fig.write_html(f"ed_model_4_cumul_mean_{col}.html")
 
     def calculate_trial_results(self):
         if self.warm_up_trial:
@@ -1021,7 +1003,6 @@ class Trial:
             self.trial_mean_q_time_pharm + (t * self.se_q_time_pharm)
         )
 
-        # NEW
         self.trial_mean_q_time_doctor_pri_1 = (
             self.replication_df["mean_q_time_doctor_pri_1"].mean()
         )
@@ -1133,7 +1114,6 @@ class Trial:
             )
         )
 
-        # NEW
         self.trial_mean_receptionist_util_prop = (
             self.replication_df["receptionist_util_prop"].mean()
         )
@@ -1196,7 +1176,7 @@ class Trial:
         fig.write_html("ed_arrival_time_frequencies.html")
 
 base_case_params = Param(
-    patient_iat_csv="ed_iat_table.csv" # NEW - removed warm up override
+    patient_iat_csv="ed_iat_table.csv"
 )
 
 #warm_up_assessment_trial = Trial(base_case_params, "Warm Up Assessment")
@@ -1211,7 +1191,6 @@ base_case_trial.calculate_trial_results()
 base_case_trial.plot_arrival_time_frequencies()
 list_of_trials.append(base_case_trial)
 
-# NEW
 wi_1_params = Param(
     num_doctors=18,
     patient_iat_csv="ed_iat_table.csv"
@@ -1274,7 +1253,6 @@ for trial in list_of_trials:
     )
     print ()
 
-    # NEW
     print ("Treatment (by Priority)")
     print (
         "("
@@ -1408,7 +1386,6 @@ for trial in list_of_trials:
     )
     print ()
 
-    # NEW
     print ("MEAN RESOURCE UTILISATION")
     print (
         "Receptionist : ",
