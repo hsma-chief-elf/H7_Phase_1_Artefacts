@@ -554,21 +554,6 @@ for ass_apt in sorted(base_case_trial.trial_mean_q_time_assessment_apts):
         f"{base_case_trial.trial_ci_upper_q_time_assessment_apts[ass_apt]:.2f})"
     )
 
-print ("First Assessment ONLY")
-print (
-    "Mean :",
-    f"{base_case_trial.trial_mean_q_time_assessment_apts['assessment_1']:.2f}",
-    "SD :",
-    f"{base_case_trial.trial_sd_q_time_assessment_apts['assessment_1']:.2f}",
-    "90th Perc :",
-    f"{base_case_trial.trial_perc_90_assessment_apts['assessment_1']:.2f}",
-    "SE :",
-    f"{base_case_trial.se_q_time_assessment_apts['assessment_1']:.2f}",
-    "95% CI:",
-    f"({base_case_trial.trial_ci_lower_q_time_assessment_apts['assessment_1']:.2f},",
-    f"{base_case_trial.trial_ci_upper_q_time_assessment_apts['assessment_1']:.2f})"
-)
-
 print ("Queuing time for Physio Appointments")
 for phy_apt in sorted(base_case_trial.trial_mean_q_time_physio_apts):
     print (
