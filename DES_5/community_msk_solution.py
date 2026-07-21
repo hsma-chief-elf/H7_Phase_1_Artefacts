@@ -1,7 +1,6 @@
-from numpy import random
 from numpy.char import startswith
 import simpy
-from sim_tools.distributions import Poisson, Exponential
+from sim_tools.distributions import Poisson
 import pandas as pd
 import math
 from scipy import stats
@@ -24,7 +23,6 @@ class Patient:
         self.q_time_assessment_apts = {}
         self.q_time_physio_apts = {}
         self.q_time_injection_apts = {}
-        self.reneged = False
 
 class Param:
     def __init__(
@@ -39,11 +37,7 @@ class Param:
         fixed_delay_after_injection = 42,
         results_collection_period = (365) * 5,
         warm_up_period = 365,
-        num_replications = 10,
-        mean_patience_first_assessment = 999999,
-        mean_patience_subs_assessments = 999999,
-        mean_patience_physio = 999999,
-        mean_patience_injection = 999999
+        num_replications = 10
     ):
         self.transition_prob_matrix_df = (
             pd.read_csv(transition_prob_matrix_csv)
@@ -62,10 +56,6 @@ class Param:
         self.warm_up_period = warm_up_period
         self.sim_duration = warm_up_period + results_collection_period
         self.num_replications = num_replications
-        self.mean_patience_first_assessment = mean_patience_first_assessment
-        self.mean_patience_subs_assessments = mean_patience_subs_assessments
-        self.mean_patience_physio = mean_patience_physio
-        self.mean_patience_injection = mean_patience_injection
 
 class Model:
     def __init__(self, param, replication_id):
@@ -93,7 +83,7 @@ class Model:
         )
 
         ss = np.random.SeedSequence(self.replication_id)
-        seeds = ss.spawn(6)
+        seeds = ss.spawn(2)
 
         self.referrals_per_day_dist = Poisson(
             rate=self.param.mean_referrals_per_day,
@@ -104,31 +94,7 @@ class Model:
             np.random.default_rng(seeds[1])
         )
 
-        self.patience_first_ass_dist = Exponential(
-            mean=self.param.mean_patience_first_assessment,
-            random_seed=seeds[2]
-        )
-
-        self.patience_subs_ass_dist = Exponential(
-            mean=self.param.mean_patience_subs_assessments,
-            random_seed=seeds[3]
-        )
-
-        self.patience_physio_dist = Exponential(
-            mean=self.param.mean_patience_physio,
-            random_seed=seeds[4]
-        )
-
-        self.patience_injection_dist = Exponential(
-            mean=self.param.mean_patience_injection,
-            random_seed=seeds[5]
-        )
-
         self.list_of_patients = []
-        self.list_of_reneged_patients_first_ass = []
-        self.list_of_reneged_patients_subs_ass = []
-        self.list_of_reneged_patients_physio = []
-        self.list_of_reneged_patients_injection = []
         self.mean_q_time_assessment_apts = {}
         self.mean_q_time_physio_apts = {}
         self.mean_q_time_injection_apts = {}
@@ -138,10 +104,6 @@ class Model:
         self.perc_90_q_time_assessment_apts = {}
         self.perc_90_q_time_physio_apts = {}
         self.perc_90_q_time_injection_apts = {}
-        self.num_reneged_first_assessment = 0
-        self.num_reneged_subs_assessment = 0
-        self.num_reneged_physio = 0
-        self.num_reneged_injection = 0
 
     def generator_new_referrals(self):
         while True:
@@ -160,36 +122,23 @@ class Model:
 
         if is_first:
             slots_to_consume = 1.0
-            patience = self.patience_first_ass_dist.sample()
         else:
             slots_to_consume = 0.5
-            patience = self.patience_subs_ass_dist.sample()
-        
-        yield (
-            self.daily_assessment_slots.get(slots_to_consume) |
-            self.env.timeout(patience)
-        )
 
-        if self.env.now == (start_q_assessment_apt + patience):
-            if self.env.now > self.param.warm_up_period:
-                patient.reneged = True
-                if is_first:
-                    self.list_of_reneged_patients_first_ass.append(patient)
-                else:
-                    self.list_of_reneged_patients_subs_ass.append(patient)
-        else:
-            end_q_assessment_apt = self.env.now
+        yield self.daily_assessment_slots.get(slots_to_consume)
 
-            if self.env.now > self.param.warm_up_period:
-                patient.q_time_assessment_apts[
-                    patient.current_assessment_apt_id
-                ] = (
-                    end_q_assessment_apt - start_q_assessment_apt
-                )
+        end_q_assessment_apt = self.env.now
 
-            yield self.env.timeout(1)
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_assessment_apts[
+                patient.current_assessment_apt_id
+            ] = (
+                end_q_assessment_apt - start_q_assessment_apt
+            )
 
-            yield self.daily_assessment_slots.put(slots_to_consume)
+        yield self.env.timeout(1)
+
+        yield self.daily_assessment_slots.put(slots_to_consume)
 
     def attend_physio_apt(self, patient, is_first):
         start_q_physio_apt = self.env.now
@@ -199,60 +148,40 @@ class Model:
         else:
             slots_to_consume = 1.0
 
-        patience = self.patience_physio_dist.sample()
+        yield self.daily_physio_slots.get(slots_to_consume)
 
-        yield (
-            self.daily_physio_slots.get(slots_to_consume) |
-            self.env.timeout(patience)
-        )
+        end_q_physio_apt = self.env.now
 
-        if self.env.now == (start_q_physio_apt + patience):
-            if self.env.now > self.param.warm_up_period:
-                patient.reneged = True
-                self.list_of_reneged_patients_physio.append(patient)
-        else:
-            end_q_physio_apt = self.env.now
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_physio_apts[
+                patient.current_physio_apt_id
+            ] = (
+                end_q_physio_apt - start_q_physio_apt
+            )
 
-            if self.env.now > self.param.warm_up_period:
-                patient.q_time_physio_apts[
-                    patient.current_physio_apt_id
-                ] = (
-                    end_q_physio_apt - start_q_physio_apt
-                )
+        yield self.env.timeout(1)
 
-            yield self.env.timeout(1)
-
-            yield self.daily_physio_slots.put(slots_to_consume)
+        yield self.daily_physio_slots.put(slots_to_consume)
 
     def attend_injection_apt(self, patient):
         start_q_injection_apt = self.env.now
 
         slots_to_consume = 1.0
 
-        patience = self.patience_injection_dist.sample()
+        yield self.daily_injection_slots.get(slots_to_consume)
 
-        yield (
-            self.daily_injection_slots.get(slots_to_consume) |
-            self.env.timeout(patience)
-        )
+        end_q_injection_apt = self.env.now
 
-        if self.env.now == (start_q_injection_apt + patience):
-            if self.env.now > self.param.warm_up_period:
-                patient.reneged = True
-                self.list_of_reneged_patients_injection.append(patient)
-        else:
-            end_q_injection_apt = self.env.now
+        if self.env.now > self.param.warm_up_period:
+            patient.q_time_injection_apts[
+                patient.current_injection_apt_id
+            ] = (
+                end_q_injection_apt - start_q_injection_apt
+            )
 
-            if self.env.now > self.param.warm_up_period:
-                patient.q_time_injection_apts[
-                    patient.current_injection_apt_id
-                ] = (
-                    end_q_injection_apt - start_q_injection_apt
-                )
+        yield self.env.timeout(1)
 
-            yield self.env.timeout(1)
-
-            yield self.daily_injection_slots.put(slots_to_consume)
+        yield self.daily_injection_slots.put(slots_to_consume)
 
     def post_appointment_delay(self, patient, time_to_delay):
         yield self.env.timeout(time_to_delay)
@@ -265,9 +194,6 @@ class Model:
         )
 
         while True:
-            # CHECK IF PATIENT RENEGED WAITING FOR PREVIOUS APPOINTMENT
-            if patient.reneged == True:
-                return
             # GRAB TRANSITION PROBABILITIES FROM CURRENT STATE
             transition_row = (
                 self.param.transition_prob_matrix_df.loc[
@@ -449,19 +375,6 @@ class Model:
                 entity_dataframe[col].quantile(0.9)
             )
 
-        self.num_reneged_first_assessment = (
-            len(self.list_of_reneged_patients_first_ass)
-        )
-        self.num_reneged_subs_assessment = (
-            len(self.list_of_reneged_patients_subs_ass)
-        )
-        self.num_reneged_physio = (
-            len(self.list_of_reneged_patients_physio)
-        )
-        self.num_reneged_injection = (
-            len(self.list_of_reneged_patients_injection)
-        )
-
 class Trial:
     def __init__(self, param):
         self.param = param
@@ -484,10 +397,6 @@ class Trial:
         self.se_q_time_assessment_apts = {}
         self.se_q_time_physio_apts = {}
         self.se_q_time_injection_apts = {}
-        self.trial_mean_first_ass_reneged = pd.NA
-        self.trial_mean_subs_ass_reneged = pd.NA
-        self.trial_mean_physio_reneged = pd.NA
-        self.trial_mean_injection_reneged = pd.NA
 
     def run_trial(self):
         for replication_id in tqdm(
@@ -616,19 +525,6 @@ class Trial:
         self.trial_ci_upper_q_time_injection_apts = (
             (injection_means_means + t_injection * injection_se_values)
             .to_dict()
-        )
-
-        self.trial_mean_first_ass_reneged = (
-            self.replication_df["num_reneged_first_assessment"].mean()
-        )
-        self.trial_mean_subs_ass_reneged = (
-            self.replication_df["num_reneged_subs_assessment"].mean()
-        )
-        self.trial_mean_physio_reneged = (
-            self.replication_df["num_reneged_physio"].mean()
-        )
-        self.trial_mean_injection_reneged = (
-            self.replication_df["num_reneged_injection"].mean()
         )
 
 # BASE CASE PARAMETERS DEFINITION
