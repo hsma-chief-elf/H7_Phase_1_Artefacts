@@ -37,7 +37,7 @@ class Param:
         fixed_delay_after_injection = 42,
         results_collection_period = (365) * 5,
         warm_up_period = 365,
-        num_replications = 100
+        num_replications = 10
     ):
         self.transition_prob_matrix_df = (
             pd.read_csv(transition_prob_matrix_csv)
@@ -550,10 +550,8 @@ for ass_apt in sorted(base_case_trial.trial_mean_q_time_assessment_apts):
         "SE :",
         f"{base_case_trial.se_q_time_assessment_apts[ass_apt]:.2f}",
         "95% CI:",
-        f"({base_case_trial.trial_ci_lower_q_time_assessment_apts[ass_apt]:.2f}\
-            ,",
-        f"{base_case_trial.trial_ci_upper_q_time_assessment_apts[ass_apt]:.2f}\
-            ) days"
+        f"({base_case_trial.trial_ci_lower_q_time_assessment_apts[ass_apt]:.2f},",
+        f"{base_case_trial.trial_ci_upper_q_time_assessment_apts[ass_apt]:.2f})"
     )
 
 print ("First Assessment ONLY")
@@ -567,12 +565,8 @@ print (
     "SE :",
     f"{base_case_trial.se_q_time_assessment_apts['assessment_1']:.2f}",
     "95% CI:",
-    f"(\
-    {base_case_trial.trial_ci_lower_q_time_assessment_apts['assessment_1']:.2f}\
-    ,",
-    f"\
-    {base_case_trial.trial_ci_upper_q_time_assessment_apts['assessment_1']:.2f}\
-    ) days"
+    f"({base_case_trial.trial_ci_lower_q_time_assessment_apts['assessment_1']:.2f},",
+    f"{base_case_trial.trial_ci_upper_q_time_assessment_apts['assessment_1']:.2f})"
 )
 
 print ("Queuing time for Physio Appointments")
@@ -588,10 +582,8 @@ for phy_apt in sorted(base_case_trial.trial_mean_q_time_physio_apts):
         "SE :",
         f"{base_case_trial.se_q_time_physio_apts[phy_apt]:.2f}",
         "95% CI:",
-        f"({base_case_trial.trial_ci_lower_q_time_physio_apts[phy_apt]:.2f}\
-            ,",
-        f"{base_case_trial.trial_ci_upper_q_time_physio_apts[phy_apt]:.2f}\
-            ) days"
+        f"({base_case_trial.trial_ci_lower_q_time_physio_apts[phy_apt]:.2f},",
+        f"{base_case_trial.trial_ci_upper_q_time_physio_apts[phy_apt]:.2f})"
     )
 
 print ("Queuing time for Injection Appointments")
@@ -607,9 +599,7 @@ for inj_apt in sorted(base_case_trial.trial_mean_q_time_injection_apts):
         "SE :",
         f"{base_case_trial.se_q_time_injection_apts[inj_apt]:.2f}",
         "95% CI:",
-        f"({base_case_trial.trial_ci_lower_q_time_injection_apts[inj_apt]:.2f}\
-            ,",
-        f"{base_case_trial.trial_ci_upper_q_time_injection_apts[inj_apt]:.2f}\
-            ) days"
+        f"({base_case_trial.trial_ci_lower_q_time_injection_apts[inj_apt]:.2f},",
+        f"{base_case_trial.trial_ci_upper_q_time_injection_apts[inj_apt]:.2f})"
     )
 
