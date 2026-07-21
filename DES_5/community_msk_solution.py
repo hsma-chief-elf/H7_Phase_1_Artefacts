@@ -30,7 +30,7 @@ class Param:
         transition_prob_matrix_csv,
         num_assessment_slots_per_day = 10,
         num_physio_slots_per_day = 10,
-        num_injection_slots_per_day = 10,
+        num_injection_slots_per_day = 2,
         mean_referrals_per_day = 10.0,
         fixed_delay_after_assessment = 7,
         fixed_delay_after_physio = 7,
