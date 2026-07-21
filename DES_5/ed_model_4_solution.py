@@ -575,7 +575,7 @@ class Model:
                 else:
                     if self.env.now > self.param.warm_up_period:
                         self.list_of_reneged_patients.append(patient)
-                        return
+                    return
 
             if (
                 self.treat_pharm_branch_prob_rng.random() <
