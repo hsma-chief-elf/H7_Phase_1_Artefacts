@@ -8,3 +8,7 @@ dependencies:
   - pandas=3.0.6
   - sim-tools=1.3.0
   - tqdm=4.70.1
+  - pip:
+    - vidigi==2.0.0
+    - streamlit=1.64.0
+
