@@ -1,0 +1,11 @@
+name: des
+channels:
+  - conda-forge
+dependencies:
+  - python=3.14.7
+  - simpy=4.1.2
+  - numpy=2.5.3
+  - pandas=3.0.6
+  - sim-tools=1.3.0
+  - tqdm=4.70.1
+prefix: /Users/d.chalk/miniforge3/envs/des
