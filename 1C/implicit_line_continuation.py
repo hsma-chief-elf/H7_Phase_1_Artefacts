@@ -29,3 +29,9 @@ my_list_of_dictionaries = [
     }
 ]
 
+print (
+    "Hi this is Dan.  I need to write a very long print statement - or at",
+    "least one that's longer than 80 characters - in order to demonstrate the",
+    "PEP-8 approved way of splitting a print statement over multiple lines."
+)
+
